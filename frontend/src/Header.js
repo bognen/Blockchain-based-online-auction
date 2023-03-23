@@ -34,7 +34,7 @@ function Header(){
   				</div>
   				<div className="col-sm-6 col-lg-3">
   					<div className="search_main">
-                      <button className="submit_bt"><a href="#"><span className="doctor"><img src={plus_icon} /></span>Submit ads</a></button>
+                      <button className="submit_bt"><a href="/submit-add"><span className="doctor"><img src={plus_icon} /></span>Submit ads</a></button>
                       <button className="btn" onClick={() => setIsLogModalOpen(true)}>Login</button>
   				    </div>
   				</div>

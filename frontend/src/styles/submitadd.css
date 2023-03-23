@@ -1,0 +1,21 @@
+#add-submit-button{
+  padding: 15px!important;
+  width: 150px!important;
+}
+
+#pictureUpload{
+  padding-left: 0px!important;
+}
+
+.submit-ad-form .row{
+    margin-bottom: 15px;
+}
+
+.submit-ad-form label{
+  font-size: 16pt;
+  text-align: left;
+}
+
+.submit-ad-form select{
+  font-size: 14pt;
+}
