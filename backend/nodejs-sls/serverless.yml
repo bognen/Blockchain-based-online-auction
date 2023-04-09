@@ -1,0 +1,102 @@
+# Welcome to Serverless!
+# Source: https://www.freecodecamp.org/news/aws-cognito-authentication-with-serverless-and-nodejs/
+
+service: nodejs-sls
+# app and org for use with dashboard.serverless.com
+#app: fair-auction-blockchain
+#org: Khmelnytskyi National University project
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: '1'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  #stage: dev   ### <<---- Change this to prod
+  environment:
+    user_pool_id: { Ref: UserPool }
+    client_id: { Ref: UserClient }
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cognito-idp:AdminInitiateAuth
+        - cognito-idp:AdminCreateUser
+        - cognito-idp:AdminSetUserPassword
+      Resource: "*"
+
+functions:
+  loginUser:
+    handler: auth/login.handler
+    events:
+      - http:
+          path: auth/login
+          method: post
+          cors: true
+
+  signupUser:
+    handler: auth/signup.handler
+    events:
+      - http:
+          path: auth/signup
+          method: post
+          cors: true
+
+  createAuction:
+    handler: api/createAuction.handler
+    events:
+      - http:
+          path: api/create-auction
+          method: post
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+  utils:
+    handler: utils/helper.handler
+
+#    Define function environment variables here
+#    environment:
+#      variable2: value2
+
+# CloudFormation resources
+resources:
+  Resources:
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: blockchain-auction-pool
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: true
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 6
+        AutoVerifiedAttributes:
+          - email
+        VerificationMessageTemplate:
+          DefaultEmailOption: CONFIRM_WITH_LINK
+
+    UserClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: user-pool-ui
+        GenerateSecret: false
+        UserPoolId: { Ref: UserPool }
+        AccessTokenValidity: 5
+        IdTokenValidity: 5
+        ExplicitAuthFlows:
+          - "ADMIN_NO_SRP_AUTH"
+
+    UserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: blockchain-auction-pool-domain
+        UserPoolId: !Ref UserPool

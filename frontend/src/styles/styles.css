@@ -187,6 +187,7 @@ nav.main-menu {
      height: 50px;
      padding: 0px 20px;
      margin-top: 30px;
+     cursor: pointer;
 }
 .submit_bt a:hover{ color: #000; }
 
@@ -695,12 +696,9 @@ nav.main-menu {
 .copyright_text a{ color: #ffffff;}
 .copyright_text a:hover{ color: #000000;}
 
-.register-btn {
-  border: none;
-}
-
-.register-btn:focus {
-  border: none;
-  outline: none;
-  background: none;
+.username{
+    margin-top: 5px;
+    font-size: 16px;
+    color:#090f7d;
+    font-weight: bold;
 }
