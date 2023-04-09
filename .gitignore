@@ -23,3 +23,6 @@
 hs_err_pid*
 
 frontend/node_modules
+backend/nodejs-testapp/node_modules
+backend/nodejs-test-server/node_modules
+backend/smart-contracts/node_modules

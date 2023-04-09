@@ -1,0 +1,26 @@
+.small_success{
+  color: green;
+  font-size: 140%;;
+  margin-top: 8px;
+}
+
+.small_error{
+  color: red;
+  font-size: 140%;
+  margin-top: 8px;
+}
+
+.register-btn {
+  border: none!important;
+}
+
+.register-btn:focus {
+  border: none;
+  outline: none;
+  background: none;
+}
+
+.login-form-control[readonly]{
+  background-color: #ffffff!important;
+  cursor: no-drop;
+}

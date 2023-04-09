@@ -1,17 +1,39 @@
-import React, { useState } from 'react';
-
+import React, { useState, useContext } from 'react';
+import Cookies from 'js-cookie';
+import { useNavigate  } from 'react-router-dom';
 import plus_icon from './images/doctor-icon.png';
 import auction_logo from './images/auction-logo.png';
 import LoginModal from './Components/LoginModal';
+import MessageModal from './Components/MessageModal';
+import { UserContext } from './Contexts/UserContext';
+
+import { API_BASE_URL } from './config';
 
 function Header(){
 
-  //+++ Login Modal Events
+  const navigate = useNavigate();
+  const { loggedIn } = useContext(UserContext);
+
+  // ------ STATE -------//
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [showMetamaskModal, setShowMetamaskModal] = useState(false);
+
+  // ---- ACTIONS ------//
+  const submitAdClick = () => {
+      if (typeof window.ethereum !== 'undefined') {
+          navigate('/submit-add');
+      } else {
+          setShowMetamaskModal(true);
+      }
+  };
 
   return(
     <div className="header_section">
       { isLogModalOpen ? <LoginModal onCancelButtonClick={() => setIsLogModalOpen(false)} /> : null }
+      <MessageModal title="Metamask Extention Not Installed"
+        body="Please install Metamask and connect to network"
+        show={showMetamaskModal} onHide={() => setShowMetamaskModal(false)} />
+
   		<div className="container">
   			<div className="row">
   				<div className="col-sm-12 col-lg-3">
@@ -34,8 +56,17 @@ function Header(){
   				</div>
   				<div className="col-sm-6 col-lg-3">
   					<div className="search_main">
-                      <button className="submit_bt"><a href="/submit-add"><span className="doctor"><img src={plus_icon} /></span>Submit ads</a></button>
-                      <button className="btn" onClick={() => setIsLogModalOpen(true)}>Login</button>
+                      { loggedIn ?
+                        <div>
+                          <button className="submit_bt" onClick={submitAdClick}>
+                              <span className="doctor">
+                                    <img src={plus_icon} />
+                                </span>Submit ads
+                          </button>
+                          <div className="username">{Cookies.get('username')}</div>
+                        </div>
+                        : <button className="submit_bt" onClick={() => setIsLogModalOpen(true)}>Login</button>
+                    }
   				    </div>
   				</div>
   			</div>

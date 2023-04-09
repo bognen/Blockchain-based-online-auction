@@ -11,14 +11,17 @@ import "./Auction.sol";
 contract FairAuctionMainContract {
 
 	Auction[] public auctions;
-	event auctionCreated(address auctionAddress, address owner);
+	event auctionCreated(address auctionAddress, address owner, 
+						string hash, uint price, uint step, 
+						bool promoted, uint start, uint end);
 
-	function createAuction(uint _price, uint _step, uint _startTime, uint _endTime) external returns(address) {
+	function createAuction(string calldata _ipfsHash, uint _price, uint _step, bool _promoted, uint _startTime, uint _endTime) external returns(address) {
 
-		Auction a = new Auction(msg.sender, _price, _step, _startTime, _endTime);
+		Auction a = new Auction(msg.sender, _ipfsHash, _price, _step, _promoted, _startTime, _endTime);
 		require(address(a) != address(0), "Failed to create auction");
 		auctions.push(a);
-		emit auctionCreated(address(a), msg.sender);
+		emit auctionCreated(address(a), msg.sender, _ipfsHash, _price, _step, _promoted, _startTime, _endTime);
+		// to dynamo need to add all those + cancelled, highestBid, highestBidder
 		return address(a);
 	}
 
