@@ -44,8 +44,6 @@
 // require('dotenv').config();
 // const { MNEMONIC, PROJECT_ID } = process.env;
 
-// const HDWalletProvider = require('@truffle/hdwallet-provider');
-
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -69,6 +67,14 @@ module.exports = {
       port: 7545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
     },
+
+    awsganache: {
+      networkCheckTimeout: 100000,
+      host: "184.73.59.112",
+      port: 8545,
+      network_id: "*"
+    //  from: "0xd14661149B2E97b80618E56bAd66d4b65409Ce72"
+    },
     //
     // An additional network, but with some advanced options…
     // advanced: {
