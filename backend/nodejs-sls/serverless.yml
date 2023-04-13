@@ -17,13 +17,34 @@ provider:
   environment:
     user_pool_id: { Ref: UserPool }
     client_id: { Ref: UserClient }
+    dynamodb_main_table: auction-table
+
   iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sns:Subscribe"
+        - "sns:Receive"
+      Resource: !Ref AuctionSNSTopic
+    - Effect: Allow
+      Action:
+        - "lambda:InvokeFunction"
+      Resource: "arn:aws:lambda:${opt:region, self:provider.region}:*:nodejs-sls-dev-snsEventListener"
     - Effect: Allow
       Action:
         - cognito-idp:AdminInitiateAuth
         - cognito-idp:AdminCreateUser
         - cognito-idp:AdminSetUserPassword
       Resource: "*"
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Scan"
+        - "dynamodb:Query"
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:UpdateItem"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb_main_table}*"
 
 functions:
   loginUser:
@@ -49,17 +70,47 @@ functions:
           path: api/create-auction
           method: post
           cors: true
-          authorizer:
-            name: PrivateAuthorizer
-            type: COGNITO_USER_POOLS
-            arn:
-              Fn::GetAtt:
-                - UserPool
-                - Arn
-            claims:
-              - email
+          # authorizer:
+          #   name: PrivateAuthorizer
+          #   type: COGNITO_USER_POOLS
+          #   arn:
+          #     Fn::GetAtt:
+          #       - UserPool
+          #       - Arn
+          #   claims:
+          #     - email
+
+    layers:
+      - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
+      - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+  placeBid:
+    handler: api/placeBid.handler
+    events:
+      - http:
+          path: api/place-bid
+          method: post
+          cors: true
+          # authorizer:
+          #   name: PrivateAuthorizer
+          #   type: COGNITO_USER_POOLS
+          #   arn:
+          #     Fn::GetAtt:
+          #       - UserPool
+          #       - Arn
+          #   claims:
+          #     - email
+    layers:
+      - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
+      - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
   utils:
     handler: utils/helper.handler
+  snsEventListener:
+    handler: functions/snsListener.handler
+    events:
+      - sns:
+          arn:
+            Ref: AuctionSNSTopic
+          topicName: auction-sns-topic
 
 #    Define function environment variables here
 #    environment:
@@ -100,3 +151,33 @@ resources:
       Properties:
         Domain: blockchain-auction-pool-domain
         UserPoolId: !Ref UserPool
+
+    AuctionSNSTopic:
+      Type: "AWS::SNS::Topic"
+      Properties:
+        DisplayName: "Auction SNS Topic"
+        TopicName: auction-sns-topic
+
+    MainAuctionTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: auctionAddress
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: auctionAddress
+            KeyType: HASH
+
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.dynamodb_main_table}
+
+    AuctionSNSSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref AuctionSNSTopic
+        Protocol: lambda
+        Endpoint:
+          Fn::GetAtt: [SnsEventListenerLambdaFunction, Arn]
