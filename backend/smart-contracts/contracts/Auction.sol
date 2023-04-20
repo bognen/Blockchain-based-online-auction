@@ -33,9 +33,9 @@ contract Auction {
 	// Events
 	event bidPlaced(address _auction, address _bidder, uint _highestBid, uint _bidderCount);
 	event bidCancelled(address _auction, address _bidder, uint _highestBid, uint _bidderCount);
-	event auctionCancelled(address _auction);
-	event auctionFinished(address _auction, address _winner, uint _finalPrice);
-	event fundsWithdrawn(address _auction, address _bidder, uint _anmout);
+	event auctionCancelled(address _auction, uint _auctionBalance);
+	event auctionFinished(address _auction, address _winner, uint _finalPrice, uint _auctionBalance);
+	event fundsWithdrawn(address _auction, address _bidder, uint _amount, uint _auctionBalance);
 
 	constructor(address _owner, string memory _ipfsHash, uint _price, uint _step, bool _promoted, uint _startTime, uint _endTime){
 		owner = _owner;
@@ -100,12 +100,12 @@ contract Auction {
 
 	function cancelAuction() public onlyOwner {
 		cancelled=true;
-		emit auctionCancelled(address(this));
+		emit auctionCancelled(address(this), address(this).balance);
 	}
 
 	function finishAuction() public onlyOwner{
 		require(endTime <= block.timestamp, "Auction cannot be finished before its end time");
-		emit auctionFinished(address(this), highestBidder, activeBids[highestBidder]); 
+		emit auctionFinished(address(this), highestBidder, activeBids[highestBidder], address(this).balance); 
 	}
 
 	// Have to handle cases:
@@ -139,7 +139,7 @@ contract Auction {
 		if (!payableRecipientAccount.send(recipientAmount)) revert("Fund transfer has failed");
  		delete activeBids[msg.sender];
 
-		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount);	
+		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount, address(this).balance);	
 		return true;
 	}
 
@@ -153,7 +153,7 @@ contract Auction {
         if (!payableRecipientAccount.send(recipientAmount)) revert("Fund transfer has failed");
  		delete cancelledBids[recipientAccount];
 
-		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount);	
+		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount, address(this).balance);	
 		return true;
 	}
 
@@ -190,7 +190,7 @@ contract Auction {
     }
 
     modifier inactiveAuction {
-    	require(endTime >= block.timestamp || cancelled, "Auction is still active");
+    	require(block.timestamp >= endTime || cancelled, "Auction is still active");
         _; // 
     }
 

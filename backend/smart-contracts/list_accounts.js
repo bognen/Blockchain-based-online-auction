@@ -1,8 +1,8 @@
 const Web3 = require("web3");
 
 module.exports = async function (callback) {
-  try {
-    const web3 = new Web3("http://3.84.24.119:8545"); // Replace with the URL of your test network if different
+  /*try {
+    const web3 = new Web3("http://3.84.24.119:8545");
     const accounts = await web3.eth.getAccounts();
 
     console.log("Accounts:");
@@ -16,5 +16,13 @@ module.exports = async function (callback) {
   } catch (error) {
     console.error(error);
     callback(error);
+  } */
+  const web3 = new Web3("http://18.206.205.253:8545");
+  web3.eth.getBlock('latest', (error, block) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log(`Timestamp of the latest block: ${block.timestamp}`);
   }
+});
 };

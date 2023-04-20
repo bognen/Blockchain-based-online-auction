@@ -18,6 +18,10 @@ provider:
     user_pool_id: { Ref: UserPool }
     client_id: { Ref: UserClient }
     dynamodb_main_table: auction-table
+    dynamodb_active_bids: active-bids
+    dynamodb_historical_bids: historical-bids
+    dynamodb_cancelled_bids: cancelled-bids
+    eth_node_url: 'http://3.92.233.191:8545'
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -45,6 +49,36 @@ provider:
         - "dynamodb:BatchWriteItem"
         - "dynamodb:UpdateItem"
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb_main_table}*"
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Scan"
+        - "dynamodb:Query"
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:UpdateItem"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb_historical_bids}*"
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Scan"
+        - "dynamodb:Query"
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:UpdateItem"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb_active_bids}*"
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Scan"
+        - "dynamodb:Query"
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:UpdateItem"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb_cancelled_bids}*"
 
 functions:
   loginUser:
@@ -87,7 +121,64 @@ functions:
     handler: api/placeBid.handler
     events:
       - http:
-          path: api/place-bid
+          path: api/place-bid/{contractAddress}
+          method: post
+          cors: true
+          # authorizer:
+          #   name: PrivateAuthorizer
+          #   type: COGNITO_USER_POOLS
+          #   arn:
+          #     Fn::GetAtt:
+          #       - UserPool
+          #       - Arn
+          #   claims:
+          #     - email
+    layers:
+      - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
+      - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+  cancelBid:
+    handler: api/cancelBid.handler
+    events:
+      - http:
+          path: api/cancel-bid/{contractAddress}
+          method: post
+          cors: true
+          # authorizer:
+          #   name: PrivateAuthorizer
+          #   type: COGNITO_USER_POOLS
+          #   arn:
+          #     Fn::GetAtt:
+          #       - UserPool
+          #       - Arn
+          #   claims:
+          #     - email
+    layers:
+      - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
+      - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+  cancelAuction:
+    handler: api/cancelAuction.handler
+    events:
+      - http:
+          path: api/cancel-Auction/{contractAddress}
+          method: post
+          cors: true
+          # authorizer:
+          #   name: PrivateAuthorizer
+          #   type: COGNITO_USER_POOLS
+          #   arn:
+          #     Fn::GetAtt:
+          #       - UserPool
+          #       - Arn
+          #   claims:
+          #     - email
+    layers:
+      - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
+      - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+  withdrawFunds:
+    handler: api/withdrawFunds.handler
+    events:
+      - http:
+          path: api/withdraw-funds/{contractAddress}
           method: post
           cors: true
           # authorizer:
@@ -111,10 +202,6 @@ functions:
           arn:
             Ref: AuctionSNSTopic
           topicName: auction-sns-topic
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
 
 # CloudFormation resources
 resources:
@@ -173,6 +260,63 @@ resources:
 
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.dynamodb_main_table}
+    HistoricalBidsTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: bidder
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: bidder
+            KeyType: HASH
+
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.dynamodb_historical_bids}
+
+    ActiveBidsTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: auctionAddress
+            AttributeType: S
+          -
+            AttributeName: bidder
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: auctionAddress
+            KeyType: HASH
+          -
+            AttributeName: bidder
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.dynamodb_active_bids}
+
+    CancelledBidsTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: auctionAddress
+            AttributeType: S
+          -
+            AttributeName: bidder
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: auctionAddress
+            KeyType: HASH
+          -
+            AttributeName: bidder
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.dynamodb_cancelled_bids}
 
     AuctionSNSSubscription:
       Type: AWS::SNS::Subscription
