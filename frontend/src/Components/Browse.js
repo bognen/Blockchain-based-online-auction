@@ -22,7 +22,7 @@ function Browse(){
                  <button className="promoted_bt">PROMOTED</button>
                  <div className="eye-icon"><img src={eye_icon}/><span className="like-icon"><img src={like_icon}/></span></div>
                  <div className="numbar_text">30<span className="like-icon">01</span></div>
-                 <button className="mobile_bt"><Link to={`/auction/1`}>TEST ITEM</Link></button>
+                 <button className="mobile_bt"><Link to={`/auction/0xf5755431bfF3224976D531284cbFB6a4687aec32`}>TEST ITEM</Link></button>
               </div>
               <div className="col-sm-6 col-md-6 col-lg-3">
                  <div className="images"><img src={img2} style={{ width: '100%' }} /></div>

@@ -70,7 +70,7 @@ module.exports = {
 
     awsganache: {
       networkCheckTimeout: 100000,
-      host: "3.92.233.191",
+      host: "44.212.3.221",
       port: 8545,
       network_id: "*"
     },

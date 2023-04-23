@@ -34,13 +34,31 @@ function Home(){
             </div>
             <div className="col-sm-3">
               <div className="form-group">
-                            <input type="text" className="email_boton" placeholder="Loction in" name="Email" />
-                        </div>
+              <select name="Location" className="email_boton home_select">
+                  <option value="">Select a location</option>
+                  <option value="North America">North America</option>
+                  <option value="South America">South America</option>
+                  <option value="Africa">Africa</option>
+                  <option value="Europe">Europe</option>
+                  <option value="Asia">Asia</option>
+                  <option value="Australia&Oceania">Australia&Oceania</option>
+              </select>
+              </div>
             </div>
             <div className="col-sm-3">
               <div className="form-group">
-                            <input type="text" className="email_boton" placeholder="category" name="Email" />
-                        </div>
+                <select name="category" className="email_boton home_select">
+                    <option value="">Select a category</option>
+                    <option value="Auto Mobile">Auto Mobile</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Mother&Child">Mother&Child</option>
+                    <option value="Jobs">Jobs</option>
+                    <option value="Real estate">Real estate</option>
+                    <option value="Pets">Pets</option>
+                    <option value="Sport">Sport</option>
+                    <option value="More">More</option>
+                </select>
+              </div>
             </div>
             <div className="col-sm-3">
               <div className="form-group">
@@ -51,7 +69,7 @@ function Home(){
                           <ul>
                             <li className="active"><a href="#">Auto Mobile</a></li>
                             <li><a href="#">Fashion</a></li>
-                            <li><a href="#">Mother& Child</a></li>
+                            <li><a href="#">Mother&Child</a></li>
                             <li><a href="#">Jobs</a></li>
                             <li><a href="#">Real estate</a></li>
                             <li><a href="#">Pets</a></li>

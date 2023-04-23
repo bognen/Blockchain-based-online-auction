@@ -10,7 +10,6 @@ module.exports.handler = async (event) => {
      // If Event is Auction Created insert into DB
      switch(subject) {
         case 'auctionCreated':
-          console.log("New Auction Will be created");
           insertItem = {
               auctionAddress: message.auctionAddress,
               owner: message.owner,
@@ -102,18 +101,6 @@ async function dynamoDbInsert(table, insertItem){
       let params = {
          TableName: table,
          Item: insertItem
-         // Item: {
-         //   auctionAddress: message.auctionAddress,
-         //   owner: message.owner,
-         //   hash: message.hash,
-         //   price: message.price,
-         //   step: message.step,
-         //   promoted: message.promoted,
-         //   start: message.start,
-         //   end: message.end,
-         //   highestBid: 0,
-         //   bidCount: 0
-         // },
       };
       const resp = await dynamoDB.put(params).promise();
       console.log(`Successfully wrote item to DynamoDB: ${JSON.stringify(params.Item)}`);

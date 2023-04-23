@@ -6,8 +6,8 @@ const MainContract = require('./FairAuctionMainContract.json');
 const AuctionTemplate = require('./Auction.json');
 
 const credentials = new AWS.Credentials({
-  accessKeyId: 'XXXXXXXXXXXXXXXXXXXXXXX',
-  secretAccessKey: 'aaaaaaaaaaaaaaaaaaaaaaaaaaa'
+  accessKeyId: 'XXXXXXXXXXXXXXXXXXXXXXXXX',
+  secretAccessKey: 'ccccccccccccccccccccccccccccccccccc'
 });
 
 const SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:780308835025:auction-sns-topic';
@@ -58,9 +58,15 @@ const restoreActiveContractsFromFile = () => {
 const handleEvent = (contractAddress, eventName, eventData) => {
   console.log(`Event '${eventName}' emitted from contract instance: ${contractAddress}`);
   console.log('Event data:', eventData);
+  const contractInstance = new web3.eth.Contract(AuctionTemplate.abi, contractAddress);
+  const endtime = await contractInstance.methods.endtime().call();
+  console.log(`Contract end time was returned as ${endtime}`)
 
   // Handle the auctionCancelled and auctionFinished events to mark contracts as inactive
-  if (eventName === 'auctionCancelled' || eventName === 'auctionFinished' || eventName === 'fundsWithdrawn') {
+  if (
+    eventName === 'auctionCancelled' ||
+    eventName === 'auctionFinished' ||
+    (eventName === 'fundsWithdrawn' &&  Date.now() >= endtime * 1000 ) {
     web3.eth.getBalance(contractAddress)
     .then(balance => {
       const balanceInEther = web3.utils.fromWei(balance, 'ether');
