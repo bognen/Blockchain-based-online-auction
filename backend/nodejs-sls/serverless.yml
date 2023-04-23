@@ -18,10 +18,11 @@ provider:
     user_pool_id: { Ref: UserPool }
     client_id: { Ref: UserClient }
     dynamodb_main_table: auction-table
+    dynamodb_email_account: auction-email-account
     dynamodb_active_bids: active-bids
     dynamodb_historical_bids: historical-bids
     dynamodb_cancelled_bids: cancelled-bids
-    eth_node_url: 'http://3.92.233.191:8545'
+    node_ip: '44.212.3.221'
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -79,6 +80,16 @@ provider:
         - "dynamodb:BatchWriteItem"
         - "dynamodb:UpdateItem"
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb_cancelled_bids}*"
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Scan"
+        - "dynamodb:Query"
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:UpdateItem"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb_email_account}*"
 
 functions:
   loginUser:
@@ -96,6 +107,42 @@ functions:
           path: auth/signup
           method: post
           cors: true
+  browse:
+    handler: api/browse.handler
+    events:
+      - http:
+          path: api/browse
+          method: post
+          cors: true
+
+  auctionDetails:
+    handler: api/auctionDetails.handler
+    events:
+      - http:
+          path: api/auction-details/{contractAddress}
+          method: post
+          cors: true
+
+  createAccount:
+    handler: api/createAccount.handler
+    events:
+      - http:
+          path: api/create-account
+          method: post
+          cors: true
+          # authorizer:
+          #   name: PrivateAuthorizer
+          #   type: COGNITO_USER_POOLS
+          #   arn:
+          #     Fn::GetAtt:
+          #       - UserPool
+          #       - Arn
+          #   claims:
+          #     - email
+
+    layers:
+      - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
+      - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
 
   createAuction:
     handler: api/createAuction.handler
@@ -260,6 +307,7 @@ resources:
 
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.dynamodb_main_table}
+
     HistoricalBidsTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Delete
@@ -275,6 +323,22 @@ resources:
 
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.dynamodb_historical_bids}
+
+    EmailAccountTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: email
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: email
+            KeyType: HASH
+
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.dynamodb_email_account}
 
     ActiveBidsTable:
       Type: 'AWS::DynamoDB::Table'

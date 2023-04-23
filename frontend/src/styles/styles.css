@@ -280,7 +280,7 @@ nav.main-menu {
 .email_boton{
      width: 100%;
      float: left;
-     color: #b2b1b1;
+     color: #6e6d6d;
      border: 1px solid #5a62fa;
      padding: 10px 15px;
      font-size: 14pt;
@@ -701,4 +701,26 @@ nav.main-menu {
     font-size: 16px;
     color:#090f7d;
     font-weight: bold;
+}
+
+.form-check-input{
+  margin-top: 8px!important;
+  width: 20px;
+  height: 20px;
+}
+
+.form-check-label{
+  margin-left: 5px
+}
+
+.MuiInputBase-root{
+  background-color: white!important;
+}
+
+.MuiInputBase-input{
+  min-height: 2.8rem!important;
+}
+
+.home_select{
+  height: 55px;
 }

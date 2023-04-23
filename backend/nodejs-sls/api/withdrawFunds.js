@@ -10,7 +10,7 @@ module.exports.handler = async (event) => {
    const privateKey = body.privateKey;
    const isCancelled = body.isCancelled;
    const contractAddress = event.pathParameters.contractAddress;
-   const node_url = process.env.eth_node_url
+   const node_url = `http://${process.env.node_ip}:8545`;
 
    const provider = new Provider(privateKey, node_url);
    const web3 = new Web3(provider);

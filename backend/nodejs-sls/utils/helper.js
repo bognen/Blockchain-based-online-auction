@@ -1,3 +1,6 @@
+// In your AWS Lambda function
+//const IPFS = require('ipfs-core');
+
 const sendResponse = (statusCode, body) => {
     const response = {
         statusCode: statusCode,
@@ -27,17 +30,6 @@ const validateLoginParameters = (data) => {
     return true
 }
 
-const deployDataToIPFS = (stringArr, imgArr) => {
-  return new Promise(function(resolve, reject) {
-     setTimeout(function() {
-       resolve("&Dasia0!)kslakdjalhad-0as1");
-       // else
-       // reject(new Error("Something went wrong"));
-     }, 3000);
-   });
-}
-
-
 module.exports = {
-  sendResponse, validateSignUpParameters, validateLoginParameters, deployDataToIPFS
+  sendResponse, validateSignUpParameters, validateLoginParameters
 }

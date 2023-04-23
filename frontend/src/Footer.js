@@ -31,7 +31,7 @@ function Footer(){
     				</div>
     				<div className="col-sm-6 col-md-6 col-lg-3">
     					<h1 className="quick_text">Contact Us</h1>
-    					<div className="map_flag"><img src={map_flag.png}/><span className="padding-left">Instytutska 11, Khmelnytskyi, UKRAINE</span></div>
+    					<div className="map_flag"><img src={map_flag.png}/><span className="padding-left" style={{textAlign: 'left'}}>Instytutska 11, Khmelnytskyi, UKRAINE</span></div>
     					<div className="dolor_text"><img src={email_icon.png}/><span className="padding-left">dima.bognen@gmail.com</span></div>
     					<div className="dolor_text"><img src={phone_icon.png}/><span className="padding-left">+38038998877</span></div>
     				</div>
