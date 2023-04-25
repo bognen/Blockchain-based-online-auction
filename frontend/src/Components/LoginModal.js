@@ -4,12 +4,18 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { API_BASE_URL } from './../config';
 import './../styles/login-modal.css'
 import { UserContext } from './../Contexts/UserContext';
+import MessageModal from './MessageModal';
 
 function LoginModal({onCancelButtonClick}) {
 
+  // State variables
+  const [dialogModalTitle, setDialogModalTitle] = useState('');
+  const [dialogModalBody, setDialogModalBody] = useState('');
+  const [showMessageModal, setShowMessageModal] = useState(false);
+
   // Login variables
-  const { loggedIn, token, tokenExpiresAt,
-          setLoggedIn, setToken, setTokenExpiresAt } = useContext(UserContext);
+  const { loggedIn, email, token, tokenExpiresAt, account,
+          setLoggedIn, setEmail, setToken, setTokenExpiresAt, setAccount } = useContext(UserContext);
 
   //******************************************
   //**********   MODAL BEHAVIOR  *************
@@ -56,8 +62,14 @@ function LoginModal({onCancelButtonClick}) {
   const registerUserSubmit = async (event) => {
     setIsSubmitting(true);
     try {
-      const response = await axios.post(API_BASE_URL+'auth/signup', registerFormData);
+      const response = await axios.post(process.env.REACT_APP_REST_API_URL+'/auth/signup', registerFormData);
       if(response.status == 200) setRegisterResponse("Success");
+      setDialogModalTitle("Account Needed");
+      setDialogModalBody("You have successfully register. Now please proceed to the provided email confirm registration."+
+                         "Login and then create an account within our blockchain network. Use link in upper right corner."+
+                         "As the result you will recieve a private key. You will need to store it and use"+
+                         "to sign trasactions later")
+      setShowMessageModal(true);
     } catch (error) {
       setRegisterResponse("Error");
       console.error(error);
@@ -83,22 +95,36 @@ function LoginModal({onCancelButtonClick}) {
   const loginUserSubmit = async (event) => {
     setIsSubmitting(true);
     try {
-      const response = await axios.post(API_BASE_URL+'auth/login', loginFormData);
+        const response = await axios.post(process.env.REACT_APP_REST_API_URL+'/auth/login', loginFormData);
          if(response.status == 200){
             setLoggedIn(true);
+            setEmail(loginFormData.email);
             setToken(response.data.token);
             setTokenExpiresAt(Date.now()+18000000);
-            console.log("Variables were set")
+            // TODO check account
+            axios.post(process.env.REACT_APP_REST_API_URL+'/api/account-details', {}, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${response.data.token}`
+              }
+            }).then(resp => {
+                  if(resp.data.account!=='' && resp.data.account!=undefined){
+                    setAccount(resp.data.account);
+                  }
+              }).catch(err => {
+                  console.log("An error occurred while retrieveing account details")
+                  console.log(err)
+              })
         }
         setShowLoginModal(false);
         setIsSubmitting(false);
     } catch (error) {
+      console.log(error)
         if(error.response.data.errorMessage) setLoginErrorResponse(error.response.data.errorMessage);
         else setLoginErrorResponse("Internal Server Error")
         setIsSubmitting(false);
         console.error(error);
     }
-
   };
 
   return (
@@ -108,6 +134,11 @@ function LoginModal({onCancelButtonClick}) {
           <Modal.Title>Register</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <MessageModal title={dialogModalTitle}
+            body={dialogModalBody}
+            show={showMessageModal}
+            onHide={() => setShowMessageModal(false)}
+        />
           <Form >
             <Form.Group controlId="registerEmail">
               <Form.Label>Email address</Form.Label>

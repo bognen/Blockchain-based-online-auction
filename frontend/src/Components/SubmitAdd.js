@@ -45,60 +45,59 @@ function SubmitAdd(){
   });
   //
   const submitForm = async (event) => {
-console.log(auctionFormData);
 
-  //   const ipfs = create({ host: process.env.REACT_APP_IPFS_URL, port: '5001', protocol: 'http' });
-  //   const files = auctionFormData.pictures;
-  //   const uploadedImages = [];
-  //
-  //   for (const file of files) {
-  //       try {
-  //           const addedFile = await ipfs.add(file);
-  //           uploadedImages.push(addedFile.path);
-  //       } catch (error) {
-  //           console.error('Error uploading file:', error);
-  //       }
-  //   }
-  //
-  //   const stringObj = {
-  //     name: auctionFormData.name,
-  //     description: auctionFormData.desc,
-  //     category: auctionFormData.category,
-  //     location: auctionFormData.location,
-  //     images: uploadedImages
-  //   }
-  //
-  //   const textEncoder = new TextEncoder();
-  //   const dataBuffer = textEncoder.encode(JSON.stringify(stringObj));
-  //   const dataResult = await ipfs.add(dataBuffer);
-  //   console.log("CID for Upload >> ", dataResult.cid.toString())
-  //
-  //   // Create a new FormData object
-  //   const formData = new FormData();
-  //
-  //   formData.append('address', '0x4Af27cd88744C4db9954a187D834aE97d593670e');
-  //   formData.append('privateKey', 'd22d65681e51efee2eb95319f26a12b4e5d9e02e24a62e2fbf3753a9ccc98340');
-  //
-  //   // Append form fields to formData
-  //   formData.append('ipfsHash', dataResult.cid.toString());
-  //   formData.append('promoted', auctionFormData.promoted);
-  //   formData.append('start', auctionFormData.startTime);
-  //   formData.append('end', auctionFormData.endTime);
-  //   formData.append('price', auctionFormData.price);
-  //   formData.append('step', auctionFormData.step);
-  //
-  //   // Send a POST request with formData as the request body
-  //   try {
-  //     const response = await axios.post(process.env.REACT_APP_REST_API_URL+'/api/create-auction',
-  //     formData, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     });
-  //     console.log('Upload successful:', response.data);
-  //   } catch (error) {
-  //     console.error('Upload failed:', error);
-  //   }
+    const ipfs = create({ host: process.env.REACT_APP_IPFS_URL, port: '5001', protocol: 'http' });
+    const files = auctionFormData.pictures;
+    const uploadedImages = [];
+
+    for (const file of files) {
+        try {
+            const addedFile = await ipfs.add(file);
+            uploadedImages.push(addedFile.path);
+        } catch (error) {
+            console.error('Error uploading file:', error);
+        }
+    }
+
+    const stringObj = {
+      name: auctionFormData.name,
+      description: auctionFormData.desc,
+      category: auctionFormData.category,
+      location: auctionFormData.location,
+      images: uploadedImages
+    }
+
+    const textEncoder = new TextEncoder();
+    const dataBuffer = textEncoder.encode(JSON.stringify(stringObj));
+    const dataResult = await ipfs.add(dataBuffer);
+    console.log("CID for Upload >> ", dataResult.cid.toString())
+
+    // Create a new FormData object
+    const formData = new FormData();
+
+    formData.append('address', '0x4Af27cd88744C4db9954a187D834aE97d593670e');
+    formData.append('privateKey', 'd22d65681e51efee2eb95319f26a12b4e5d9e02e24a62e2fbf3753a9ccc98340');
+
+    // Append form fields to formData
+    formData.append('ipfsHash', dataResult.cid.toString());
+    formData.append('promoted', auctionFormData.promoted);
+    formData.append('start', auctionFormData.startTime);
+    formData.append('end', auctionFormData.endTime);
+    formData.append('price', auctionFormData.price);
+    formData.append('step', auctionFormData.step);
+
+    // Send a POST request with formData as the request body
+    try {
+      const response = await axios.post(process.env.REACT_APP_REST_API_URL+'/api/create-auction',
+      formData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Upload successful:', response.data);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
   }
 
   const auctionFormChange = (event) => {

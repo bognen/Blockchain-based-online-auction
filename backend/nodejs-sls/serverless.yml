@@ -22,7 +22,7 @@ provider:
     dynamodb_active_bids: active-bids
     dynamodb_historical_bids: historical-bids
     dynamodb_cancelled_bids: cancelled-bids
-    node_ip: '44.212.3.221'
+    node_ip: '35.171.163.216'
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -123,6 +123,26 @@ functions:
           method: post
           cors: true
 
+  accountDetails:
+    handler: api/accountDetails.handler
+    events:
+      - http:
+          path: api/account-details
+          method: post
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
+    layers:
+      - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
+
   createAccount:
     handler: api/createAccount.handler
     events:
@@ -130,19 +150,18 @@ functions:
           path: api/create-account
           method: post
           cors: true
-          # authorizer:
-          #   name: PrivateAuthorizer
-          #   type: COGNITO_USER_POOLS
-          #   arn:
-          #     Fn::GetAtt:
-          #       - UserPool
-          #       - Arn
-          #   claims:
-          #     - email
-
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
     layers:
       - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
-      - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
 
   createAuction:
     handler: api/createAuction.handler
@@ -160,7 +179,6 @@ functions:
           #       - Arn
           #   claims:
           #     - email
-
     layers:
       - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
       - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
