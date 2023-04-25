@@ -5,7 +5,6 @@ import Carousel from 'better-react-carousel';
 import { create } from "ipfs-http-client";
 import './../styles/auction.css'
 
-
 function Auction(){
   const { id } = useParams();
   const [currentImage, setCurrentImage] = useState(null);
@@ -13,11 +12,32 @@ function Auction(){
   const [ipfsData, setIpfsData] = useState(null);
   const [images, setImages] = useState(null);
 
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   // Entry point method
   useEffect(() => {
       axios.post(process.env.REACT_APP_REST_API_URL+'/api/auction-details/'+id)
       .then(response => {
         setAuctionDetails(response.data.auction);
+        setStartDate(new Date(response.data.auction.start * 1000).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true
+          }));
+        setEndDate(new Date(response.data.auction.end * 1000).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true
+          }));
         fetchIpfsData(response.data.auction.hash);
       }).catch(err => {
           console.log("An error occurred obtaining auction details")
@@ -88,6 +108,22 @@ function Auction(){
 
           {ipfsData && (<h2 className="auction-name">{ipfsData.name}</h2>)}
           <label className="auction-label">listed by {auctionDetails.owner}</label>
+          { startDate > new Date() ? (
+              <div className="row">
+                  <div className="col-3">Auction starts:</div>
+                  <div className="col-9">{startDate}</div>
+              </div>
+            ) : ( endDate < new Date() ? (
+                <div className="row">
+                    <div className="col-3">Auction Ended:</div>
+                    <div className="col-9">{endDate}</div>
+                </div>
+              ) : (
+                <div className="row">
+                    <div className="col-3">Auction Ends:</div>
+                    <div className="col-9">{endDate}</div>
+                </div>
+              ))}
           <div className="bidding-section row">
               <div className="col-3" style={{fontSize: "16px"}}>Starting bid:</div>
               <div className="col-5">
