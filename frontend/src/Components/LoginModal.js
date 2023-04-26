@@ -102,7 +102,7 @@ function LoginModal({onCancelButtonClick}) {
             setToken(response.data.token);
             setTokenExpiresAt(Date.now()+18000000);
             // TODO check account
-            axios.post(process.env.REACT_APP_REST_API_URL+'/api/account-details', {}, {
+            axios.get(process.env.REACT_APP_REST_API_URL+'/api/account-details', {}, {
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${response.data.token}`
