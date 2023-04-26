@@ -5,16 +5,18 @@ const { sendResponse } = require("../utils/helper");
 module.exports.handler = async (event) => {
 
   const contractAddress = event.pathParameters.contractAddress;
-  const params = {
+
+  const auctionParams = {
         TableName: process.env.dynamodb_main_table,
-        Key: {
-          auctionAddress: contractAddress
-        },
+        Key: { auctionAddress: contractAddress }
   };
 
   try{
-      const data = await dynamoDB.get(params).promise();
-      return sendResponse(200, { auction: data.Item });
+      const auctioData = await dynamoDB.get(auctionParams).promise();
+
+      return sendResponse(200, {
+        auction: auctioData.Item,
+      });
    } catch (err) {
        console.log(err);
        const errorMessage = err.message ? err.message : 'Internal Server Error';

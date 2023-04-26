@@ -120,15 +120,33 @@ functions:
     events:
       - http:
           path: api/auction-details/{contractAddress}
-          method: post
+          method: get
           cors: true
+
+  auctionBiddingDetails:
+    handler: api/auctionBiddingDetails.handler
+    events:
+      - http:
+          path: api/auction-bidding-details/{contractAddress}
+          method: get
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
 
   accountDetails:
     handler: api/accountDetails.handler
     events:
       - http:
           path: api/account-details
-          method: post
+          method: get
           cors: true
           authorizer:
             name: PrivateAuthorizer

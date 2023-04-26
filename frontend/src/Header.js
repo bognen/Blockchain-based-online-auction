@@ -31,7 +31,7 @@ function Header(){
       setDialogModalBody("Please, add your account in our network in order to preceed")
       setShowMessageModal(true);
     }else if(loggedIn && account && account!=='null'){
-        axios.post(process.env.REACT_APP_REST_API_URL+'/api/account-details', {}, {
+        axios.get(process.env.REACT_APP_REST_API_URL+'/api/account-details', {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -101,7 +101,7 @@ function Header(){
   				<div className="col-sm-12 col-lg-3">
   					<div className="logo"><a href="/"><img src={auction_logo}/></a></div>
   				</div>
-  				<div className="col-sm-6">
+  				<div className="col-sm-6 col-lg-5">
   					<nav className="navbar navbar-expand-lg navbar-light bg-light">
                           <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                           <span className="navbar-toggler-icon"></span>
@@ -116,7 +116,7 @@ function Header(){
                       </div>
                       </nav>
   				</div>
-  				<div className="col-sm-6 col-lg-3">
+  				<div className="col-sm-12 col-lg-4">
   					<div className="search_main">
                 { loggedIn ? (
                        account!=='null' ? (

@@ -17,6 +17,7 @@ module.exports.handler = async (event) => {
               price: message.price,
               step: message.step,
               promoted: message.promoted,
+              cancelled: false,
               start: message.start,
               end: message.end,
               highestBid: 0,
@@ -59,8 +60,21 @@ module.exports.handler = async (event) => {
             .catch(err => console.log(`An error occurred while inserting into cancelled bidder table`))
           break;
 
-        case 'auctionCancelled':
         case 'auctionExpired':
+        case 'auctionCancelled':
+            const params = {
+               TableName: process.env.dynamodb_main_table,
+               Key: { 'auctionAddress': message._auction },
+               UpdateExpression: 'set cancelled = :cld',
+               ExpressionAttributeValues: { ':cld': true },
+               ReturnValues: 'UPDATED_NEW',
+             };
+          try{
+              const resp = await dynamoDB.update(params).promise();
+              console.log(`Successfully changed Auction state to Cancelled: ${JSON.stringify(params)}`);
+            } catch (error) {
+              console.error('Failed to change Auction state to Cancelled:', error);
+            }
         case 'fundsWithdrawn':
           console.log(`The balance is ${message._auctionBalance}`);
           // Try to remove from Active Bids
