@@ -724,3 +724,18 @@ nav.main-menu {
 .home_select{
   height: 55px;
 }
+
+
+.user-info-block {
+    display: block;
+}
+
+@media (max-width: 575px) {
+    .user-info-block {
+        display: none;
+        margin-left: 0px;
+    }
+    .logo{
+      text-align: left;;
+    }
+}
