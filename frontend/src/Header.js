@@ -16,7 +16,6 @@ function Header(){
   const setBlocking = useContext(BlockingContext);
   const [ethBalance, setEthBalance] = useState(0);
 
-
   // ------ STATE VARIABLES -------//
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [dialogModalTitle, setDialogModalTitle] = useState('');
@@ -65,6 +64,7 @@ function Header(){
 
   const addAccount = (value) => {
     setBlocking(true);
+    setShowSignModal(false);
     axios.post(process.env.REACT_APP_REST_API_URL+'/api/create-account', {
       account: value
     }, {
@@ -74,14 +74,12 @@ function Header(){
       }
     }).then(resp => {
         setBlocking(false);
-        setShowSignModal(false);
         setDialogModalTitle("Account Added");
         setDialogModalBody("Your Account Was Successfully Added")
         setShowMessageModal(true);
         setAccount(resp.data.address);
     }).catch(error =>{
         setBlocking(false);
-        setShowSignModal(false);
         console.error('Failed to create account: ', error);
     })
   }
@@ -98,11 +96,11 @@ function Header(){
 
   		<div className="container">
   			<div className="row">
-  				<div className="col-sm-12 col-lg-3">
+  				<div className="col-sm-6 col-lg-3">
   					<div className="logo"><a href="/"><img src={auction_logo}/></a></div>
   				</div>
   				<div className="col-sm-6 col-lg-5">
-  					<nav className="navbar navbar-expand-lg navbar-light bg-light">
+  					<nav className="navbar navbar-expand-lg navbar-light bg-light" style={{float:"right"}}>
                           <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                           <span className="navbar-toggler-icon"></span>
                           </button>
@@ -126,7 +124,7 @@ function Header(){
                                         <img src={plus_icon} />
                                     </span>Submit ads
                               </button>
-                              <div style={{ display: "block", marginLeft: "40px" }}>
+                              <div className="user-info-block">
                                 <div className="username">{email}</div>
                                 <div className="username">Current balance: {ethBalance} ETH</div>
                                 <button className="btn btn-link" onClick={() => goToMyAuctions()}>My Auctions</button>

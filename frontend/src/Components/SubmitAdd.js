@@ -10,28 +10,26 @@ import { useNavigate  } from 'react-router-dom';
 import React, { useEffect, useState, useContext } from 'react';
 import { Modal, Button, Row, Col, Form } from 'react-bootstrap';
 import MessageModal from './MessageModal';
+import SignModal from './SignModal';
 import { UserContext } from './../Contexts/UserContext';
+import { BlockingContext } from './../App';
 
 
 function SubmitAdd(){
 
   const navigate = useNavigate();
-  const { loggedIn } = useContext(UserContext);
+  const { loggedIn, account } = useContext(UserContext);
+  const setBlocking = useContext(BlockingContext);
   // DialogModal Variables
   const [dialogModalTitle, setDialogModalTitle] = useState('');
   const [dialogModalBody, setDialogModalBody] = useState('');
   const [showMessageModal, setShowMessageModal] = useState(false);
-  const [metamaskInstalled, setMetamaskInstalled] = useState(false);
+  const [showSignModal, setShowSignModal] = useState(false);
 
   useEffect(() => {
-    // if(!loggedIn){
-    //     navigate('/');
-    //   }else if (!window.ethereum) {
-    //     setDialogModalTitle("No Metamask Detected");
-    //     setDialogModalBody("In order to proceed Metamask Extenetion need to be installed");
-    //     setShowMessageModal(true);
-    //     setMetamaskInstalled(false);
-    // }
+    if(!loggedIn) navigate('/');
+    if(account === 'null' || account === null ) navigate('/');
+
   }, [])
 
   const [auctionFormData, setAuctionFormData] = useState({
@@ -44,8 +42,8 @@ function SubmitAdd(){
     location: ''
   });
   //
-  const submitForm = async (event) => {
-
+  const submitForm = async (value) => {
+    setBlocking(true);
     const ipfs = create({ host: process.env.REACT_APP_IPFS_URL, port: '5001', protocol: 'http' });
     const files = auctionFormData.pictures;
     const uploadedImages = [];
@@ -75,8 +73,8 @@ function SubmitAdd(){
     // Create a new FormData object
     const formData = new FormData();
 
-    formData.append('address', '0x4Af27cd88744C4db9954a187D834aE97d593670e');
-    formData.append('privateKey', 'd22d65681e51efee2eb95319f26a12b4e5d9e02e24a62e2fbf3753a9ccc98340');
+    formData.append('address', account);
+    formData.append('privateKey', value);
 
     // Append form fields to formData
     formData.append('ipfsHash', dataResult.cid.toString());
@@ -94,9 +92,12 @@ function SubmitAdd(){
           'Content-Type': 'application/json',
         },
       });
+      setBlocking(false);
       console.log('Upload successful:', response.data);
+      navigate('/auction/'+response.data.auctionAddress);
     } catch (error) {
       console.error('Upload failed:', error);
+      setBlocking(false);
     }
   }
 
@@ -137,6 +138,9 @@ function SubmitAdd(){
           show={showMessageModal}
           onHide={() => setShowMessageModal(false)}
       />
+      <SignModal signModalTitle="Please, Sign The Transaction" signModalInput="Private Key"
+        onShow={showSignModal} onHide={() => setShowSignModal(false)}
+        onConfirm={submitForm}/>
 
         <div className="form-group submit-ad-form">
         <h1 style={{marginBottom:'25px'}}>Add New Listing</h1>
@@ -162,13 +166,17 @@ function SubmitAdd(){
 
           <Form.Group className="row" controlId="auctionStartTime">
             <Form.Label className="col-lg-3 col-sm-6">Start Time:</Form.Label>
+            <div className="col-lg-3 col-sm-6 no-padding-left">
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimePicker name="startTime" onChange={setStartTime}  />
               </LocalizationProvider>
-            <Form.Label className="col-lg-3 col-sm-6">End Time:</Form.Label>
+            </div>
+            <Form.Label className="col-lg-3 col-sm-6 right-text-alignment">End Time:</Form.Label>
+            <div className="col-lg-3 col-sm-6">
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimePicker name="endTime" onChange={setEndTime}  />
               </LocalizationProvider>
+            </div>
           </Form.Group>
           <Form.Group className="row" controlId="auctionPics">
             <Form.Label  className="col-lg-3 col-sm-12">Description:</Form.Label>
@@ -183,7 +191,7 @@ function SubmitAdd(){
                 className="col-lg-3 col-sm-12 form-control"
                 value={auctionFormData.price}
                 onChange={auctionFormChange}/>
-            <Form.Label  className="col-lg-3 col-sm-12">Increment:</Form.Label>
+            <Form.Label  className="col-lg-3 col-sm-12 right-text-alignment">Increment:</Form.Label>
             <Form.Control type="number" name="step"
                 className="col-lg-3 col-sm-12 form-control"
                 value={auctionFormData.step}
@@ -202,7 +210,7 @@ function SubmitAdd(){
                 <option value="Asia">Asia</option>
                 <option value="Australia&Oceania">Australia&Oceania</option>
             </Form.Select>
-            <Form.Label  className="col-lg-3 col-sm-12">Category:</Form.Label>
+            <Form.Label  className="col-lg-3 col-sm-12 right-text-alignment">Category:</Form.Label>
             <Form.Select name="category" className="col-lg-3 col-sm-12 form-control"
               value={auctionFormData.category}
               onChange={auctionFormChange} >
@@ -223,7 +231,7 @@ function SubmitAdd(){
         <div className="row">
           <div className="col-md-12 text-center">
             <Button id="add-submit-button" type="button"
-                className="btn btn-info" onClick={submitForm}>SUBMIT</Button>
+                className="btn btn-info" onClick={() => setShowSignModal(true)}>SUBMIT</Button>
           </div>
         </div>
         </div>
