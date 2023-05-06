@@ -18,7 +18,7 @@ import { BlockingContext } from './../App';
 function SubmitAdd(){
 
   const navigate = useNavigate();
-  const { loggedIn, account } = useContext(UserContext);
+  const { loggedIn, account, token } = useContext(UserContext);
   const setBlocking = useContext(BlockingContext);
   // DialogModal Variables
   const [dialogModalTitle, setDialogModalTitle] = useState('');
@@ -29,7 +29,7 @@ function SubmitAdd(){
   useEffect(() => {
     if(!loggedIn) navigate('/');
     if(account === 'null' || account === null ) navigate('/');
-
+    setAuctionFormData({ ...auctionFormData, promoted: false });
   }, [])
 
   const [auctionFormData, setAuctionFormData] = useState({
@@ -43,6 +43,7 @@ function SubmitAdd(){
   });
   //
   const submitForm = async (value) => {
+    setShowSignModal(false)
     setBlocking(true);
     const ipfs = create({ host: process.env.REACT_APP_IPFS_URL, port: '5001', protocol: 'http' });
     const files = auctionFormData.pictures;
@@ -72,11 +73,8 @@ function SubmitAdd(){
 
     // Create a new FormData object
     const formData = new FormData();
-
     formData.append('address', account);
     formData.append('privateKey', value);
-
-    // Append form fields to formData
     formData.append('ipfsHash', dataResult.cid.toString());
     formData.append('promoted', auctionFormData.promoted);
     formData.append('start', auctionFormData.startTime);
@@ -90,6 +88,7 @@ function SubmitAdd(){
       formData, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
       });
       setBlocking(false);
@@ -130,7 +129,7 @@ function SubmitAdd(){
   }
 
   return(
-    <div className="layout_padding promoted_sectipon">
+    <div className="layout_padding" style={{backgroundColor: "#ced4da"}}>
       <div className="container" style={{width: "60%"}}>
 
       <MessageModal title={dialogModalTitle}
@@ -158,7 +157,7 @@ function SubmitAdd(){
           </Form.Group>
           <Form.Group className="row" controlId="pictures">
             <Form.Label  className="col-lg-3 col-sm-12">Upload Picture:</Form.Label>
-            <Form.Control type="file" name="pictures" style={{ backgroundColor: '#e6e6e6' }}
+            <Form.Control type="file" name="pictures" style={{ backgroundColor: '#ced4da' }}
                 className="col-lg-9 col-sm-12 login-form-control"
                 accept=".jpg,.png" multiple
                 onChange={auctionFormChange}/>

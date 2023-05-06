@@ -4,7 +4,6 @@ const MainContract = require('./../contracts/FairAuctionMainContract.json');
 
 const { sendResponse } = require("../utils/helper");
 
-
 module.exports.handler = async (event) => {
 
     const body = JSON.parse(event.body);
@@ -14,11 +13,14 @@ module.exports.handler = async (event) => {
     const address = body.address;
     const privateKey = body.privateKey;
     const ipfsHash = body.ipfsHash;
-    const promoted = body.promoted;
+    const promoted = (body.promoted === "true");
     const price = parseInt(body.price);
     const step = parseInt(body.step);
     const startTime = body.start;
     const endTime = body.end;
+
+console.log("Promoted", promoted);
+console.log("Type", typeof promoted)
 
     try {
       const provider = new Provider(privateKey, node_url);

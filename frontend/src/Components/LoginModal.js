@@ -97,17 +97,21 @@ function LoginModal({onCancelButtonClick}) {
     try {
         const response = await axios.post(process.env.REACT_APP_REST_API_URL+'/auth/login', loginFormData);
          if(response.status == 200){
-            setLoggedIn(true);
-            setEmail(loginFormData.email);
-            setToken(response.data.token);
-            setTokenExpiresAt(Date.now()+18000000);
-            // TODO check account
+            // setLoggedIn(true);
+            // setEmail(loginFormData.email);
+            // setToken(response.data.token);
+            // setTokenExpiresAt(Date.now()+18000000);
+
             axios.get(process.env.REACT_APP_REST_API_URL+'/api/account-details', {
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${response.data.token}`
               }
             }).then(resp => {
+                  setLoggedIn(true);
+                  setEmail(loginFormData.email);
+                  setToken(response.data.token);
+                  setTokenExpiresAt(Date.now()+18000000);
                   if(resp.data.account!=='' && resp.data.account!=undefined){
                     setAccount(resp.data.account);
                   }

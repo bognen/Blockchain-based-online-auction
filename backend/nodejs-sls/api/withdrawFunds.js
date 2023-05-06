@@ -11,7 +11,7 @@ module.exports.handler = async (event) => {
    const isCancelled = body.isCancelled;
    const contractAddress = event.pathParameters.contractAddress;
    const node_url = `http://${process.env.node_ip}:8545`;
-
+console.log("body > ",body)
    const provider = new Provider(privateKey, node_url);
    const web3 = new Web3(provider);
    const networkId = await web3.eth.net.getId();
