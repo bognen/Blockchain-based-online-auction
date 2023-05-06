@@ -13,7 +13,11 @@ function SignModal(props) {
   }
 
   const handleConfirm = () => {
-    props.onConfirm(providedValue);
+    let returnValue = providedValue;
+    // if (returnValue.startsWith("0x")) {
+    //     returnValue = returnValue.substring(2);
+    //   }
+    props.onConfirm(returnValue);
   }
 
   return (

@@ -12,14 +12,14 @@ module.exports.handler = async (event) => {
         case 'auctionCreated':
           insertItem = {
               auctionAddress: message.auctionAddress,
-              owner: message.owner,
+              auctionOwner: message.owner,
               hash: message.hash,
               price: message.price,
               step: message.step,
               promoted: message.promoted,
               cancelled: false,
-              start: message.start,
-              end: message.end,
+              startTime: message.start,
+              endTime: message.end,
               highestBid: 0,
               bidCount: 0
           }
@@ -62,19 +62,30 @@ module.exports.handler = async (event) => {
 
         case 'auctionExpired':
         case 'auctionCancelled':
-            const params = {
+          const params = {
                TableName: process.env.dynamodb_main_table,
                Key: { 'auctionAddress': message._auction },
                UpdateExpression: 'set cancelled = :cld',
                ExpressionAttributeValues: { ':cld': true },
                ReturnValues: 'UPDATED_NEW',
              };
-          try{
-              const resp = await dynamoDB.update(params).promise();
-              console.log(`Successfully changed Auction state to Cancelled: ${JSON.stringify(params)}`);
-            } catch (error) {
-              console.error('Failed to change Auction state to Cancelled:', error);
-            }
+
+          // try{
+          //     const resp = await dynamoDB.update(params).promise();
+          //     console.log(`Successfully changed Auction state to Cancelled: ${JSON.stringify(params)}`);
+          //   } catch (error) {
+          //     console.error('Failed to change Auction state to Cancelled:', error);
+          //   }
+            // Update auction information
+            await dynamoDB.update(params).promise()
+              .then(resp => { `Successfully changed Auction state to Cancelled: ${JSON.stringify(params)}` })
+              .catch(error => {'Failed to change Auction state to Cancelled:', error})
+            // Move all active bidders to cancelledRows
+            await cancelActiveBidders(message._auction)
+              .then(resp => { console.log("Bidders were succssfully moved to cancelled state") })
+              .catch(err => { console.log(`An error occurred: ${err}`) });
+            break;
+
         case 'fundsWithdrawn':
           console.log(`The balance is ${message._auctionBalance}`);
           // Try to remove from Active Bids
@@ -91,7 +102,6 @@ module.exports.handler = async (event) => {
           console.log(`Auction balance type ${typeof message._auctionBalance}`)
           if (message._auctionBalance === '0') {
             console.log("The auction will be deleted");
-
             // Remove all leftover items from bidders Table
             await deleteItemsByAuctionAddress(process.env.dynamodb_active_bids, message._auction)
               .then(resp => console.log(`Active Bids Removed: ${resp}`))
@@ -100,7 +110,6 @@ module.exports.handler = async (event) => {
             await deleteItemsByAuctionAddress(process.env.dynamodb_cancelled_bids, message._auction)
               .then(resp => console.log(`Auction Removed: ${resp}`))
               .catch(err => console.error(err));
-
           }
           break;
         default:
@@ -233,4 +242,49 @@ async function deleteItemsByAuctionAddress(tableName, auctionAddress) {
     await dynamoDB.delete(deleteParams).promise();
     console.log(`Deleted item: auctionAddress: ${item.auctionAddress}, bidder: ${item.bidder}`);
   }
+}
+
+/** The function is responsible for removing data from active bidders and
+    and put them into cancelled */
+async function cancelActiveBidders(auctionAddress) {
+
+    // Get all active bids of the auction
+    const scanParams = {
+          TableName: process.env.dynamodb_active_bids,
+          FilterExpression: 'auctionAddress= :auctionAddress',
+          ExpressionAttributeValues: {
+              ':auctionAddress': auctionAddress
+          }
+    };
+    const activeBids = await dynamoDB.scan(scanParams).promise();
+
+    // Write Params
+    const writeParams = {
+       RequestItems: {
+         [process.env.dynamodb_cancelled_bids]: activeBids.Items.map(item => ({
+           PutRequest: {
+             Item: item
+           }
+         }))
+       }
+     };
+     // Delete Params
+     const deleteParams = {
+         RequestItems: {
+           [process.env.dynamodb_active_bids]: activeBids.Items.map(item => ({
+             DeleteRequest: {
+               Key: item
+             }
+           }))
+         }
+       };
+    //
+    try {
+       const writeResult = await dynamoDB.batchWrite(writeParams).promise();
+       console.log('Batch write successful:', writeResult);
+       const deleteResult = await dynamoDB.batchWrite(deleteParams).promise();
+       console.log('Batch delete successful:', deleteResult);
+    } catch (error) {
+       throw new Error(`Could not update DynamoDB tables: ${error.message}`);
+    }
 }

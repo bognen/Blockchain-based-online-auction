@@ -35,17 +35,27 @@ module.exports.handler = async (event) => {
 
       const historicalBidParams = {
             TableName: process.env.dynamodb_historical_bids,
-            Key: { bidder: accountData.Item.account }
+            KeyConditionExpression: '#bidder = :bidder',
+            FilterExpression: '#auction = :auction',
+            ExpressionAttributeNames: {
+               '#bidder': 'bidder',
+               '#auction': 'auction',
+            },
+            ExpressionAttributeValues: {
+               ':bidder': accountData.Item.account,
+               ':auction': contractAddress,
+            }
       };
 
       try{
           const activeBids = await dynamoDB.get(actBidParams).promise();
           const cancelBid = await dynamoDB.get(cancelBidParams).promise();
-          const historicalBids = await dynamoDB.get(historicalBidParams).promise();
+          const historicalBids = await dynamoDB.query(historicalBidParams).promise();
+
           return sendResponse(200, {
             active: activeBids.Item,
             cancelled: cancelBid.Item,
-            historical: historicalBids.Item
+            historical: historicalBids.Items[0]
           });
        } catch (err) {
            console.log(err);

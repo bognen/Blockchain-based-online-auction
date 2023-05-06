@@ -1,13 +1,52 @@
-//Temporary images
-import img1 from './../images/img-1.png';
-import img2 from './../images/img-2.png';
-import img3 from './../images/img-3.png';
-import img4 from './../images/img-4.png';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import AuctionBlock from './AuctionBlock.js';
+import { fetchIpfsData } from "./../utils/utils.js";
+import 'alertifyjs/build/css/alertify.css';
+import 'alertifyjs/build/css/themes/default.css';
+import alertify from 'alertifyjs';
 
-import eye_icon from './../images/eye-icon.png';
-import like_icon from './../images/like-icon.png';
 
 function Home(){
+
+  const [auctions, setAuctions] = useState([]);
+
+  useEffect(() => {
+      axios.get(process.env.REACT_APP_REST_API_URL+'/api/get-all-auctions/four')
+        .then(async (response) => {
+            const auctionsArr = await Promise.all(
+              response.data.auctions.map(async (item) => {
+                  let ipfsData = await fetchIpfsData(item.hash);
+                  return {
+                    img: ipfsData.images[0],
+                    category: ipfsData.category,
+                    address: item.auctionAddress,
+                    promoted: item.promoted,
+                    startPrice: item.price,
+                    highestBid: item.highestBid,
+                    bids: item.bidCount,
+                  };
+                })
+            );
+            setAuctions(auctionsArr);
+        }).catch(err => {
+            alertify.error("Cannot Obtain List of Auctions");
+            console.log(err);
+            console.log(err.response.data);
+        })
+  }, [])
+
+  const rows = [];
+  for (let i = 0; i < auctions.length; i += 4) {
+      const rowAuctions = auctions.slice(i, i + 4);
+      rows.push(
+        <div className="row" key={`row-${i}`}>
+          { rowAuctions.map((auction) => (
+            <AuctionBlock img={auction.img} category={auction.category} address={auction.address} promoted={auction.promoted}
+                startPrice={auction.startPrice} highestBid={auction.highestBid} bids={auction.bids} />
+          ))}
+        </div>);
+  }
 
   return(
     <div>
@@ -80,43 +119,11 @@ function Home(){
           </div>
         </div>
       </div>
-      <div className=" layout_padding promoted_sectipon">
+      <div className="layout_padding promoted_sectipon">
+
       <div className="container">
         <h1 className="promoted_text">PROMOTED <span style={{borderBottom: '5px solid #4bc714'}}>ADS</span></h1>
-        <div className="images_main">
-          <div className="row">
-          <div className="col-sm-6 col-md-6 col-lg-3">
-             <div className="images"><img src={img1} style={{ width: '100%' }} /></div>
-             <button className="promoted_bt">PROMOTED</button>
-             <div className="eye-icon"><img src={eye_icon}/><span className="like-icon"><img src={like_icon}/></span></div>
-             <div className="numbar_text">30<span className="like-icon">01</span></div>
-             <button className="mobile_bt"><a href="#">Mobiles</a></button>
-          </div>
-          <div className="col-sm-6 col-md-6 col-lg-3">
-             <div className="images"><img src={img2} style={{ width: '100%' }} /></div>
-             <button className="promoted_bt">PROMOTED</button>
-             <div className="eye-icon"><img src={eye_icon}/><span className="like-icon"><img src={like_icon}/></span></div>
-             <div className="numbar_text">30<span className="like-icon">01</span></div>
-             <button className="mobile_bt"><a href="#">Cyicals</a></button>
-           </div>
-           <div className="col-sm-6 col-md-6 col-lg-3">
-             <div className="images"><img src={img3} style={{ width: '100%' }} /></div>
-             <button className="promoted_bt">PROMOTED</button>
-             <div className="eye-icon"><img src={eye_icon}/><span className="like-icon"><img src={like_icon}/></span></div>
-             <div className="numbar_text">30<span className="like-icon">01</span></div>
-             <button className="mobile_bt"><a href="#">Cars</a></button>
-           </div>
-           <div className="col-sm-6 col-md-6 col-lg-3">
-             <div className="images"><img src={img4} style={{ width: '100%' }} /></div>
-             <button className="promoted_bt">PROMOTED</button>
-             <div className="eye-icon"><img src={eye_icon}/><span className="like-icon"><img src={like_icon}/></span></div>
-             <div className="numbar_text">30<span className="like-icon">01</span></div>
-             <button className="mobile_bt"><a href="#">Laptops</a></button>
-           </div>
-
-
-          </div>
-        </div>
+        <div className="images_main">{rows}</div>
       </div>
       </div>
 

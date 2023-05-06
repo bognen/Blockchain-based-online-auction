@@ -355,7 +355,7 @@ nav.main-menu {
     top: -35px;
     position: relative;
     height: 50px;
-    border: 0px;
+    border: 1px solid #e6e6e6;
     font-size: 14pt;
 }
 
@@ -365,6 +365,7 @@ nav.main-menu {
     text-align: center;
 }
 .like-icon { padding-left: 20px; }
+
 .numbar_text{
      width: 100%;
      float: left;
@@ -379,7 +380,7 @@ nav.main-menu {
      text-align: center;
      font-size: 14pt;
      color: #fcfcfc;
-     background-color: #5a62fa;
+     background-color: #005FB0;
      border: 0px;
      display: block;
 }
@@ -697,6 +698,7 @@ nav.main-menu {
 .copyright_text a:hover{ color: #000000;}
 
 .username{
+    padding: 0.375rem 0.75rem;
     line-height: 1.5;
     font-size: 15px;
     color:#090f7d;

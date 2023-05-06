@@ -1,0 +1,45 @@
+.tabs {
+  display: flex;
+  justify-content: space-around;
+}
+
+.tab {
+  cursor: pointer;
+  width: 100%;
+  font-size: 16pt;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid #C8C8C8;
+}
+
+.tab_active {
+  cursor: pointer;
+  width: 100%;
+  font-size: 16pt;
+  border-top: 1px solid #D2D2D2;
+  border-left: 1px solid #D2D2D2;
+  border-right: 1px solid #D2D2D2;
+  border-bottom: none;
+}
+
+@media (max-width: 767px) {
+  .tabs {
+    display: none;
+  }
+}
+
+.select {
+  display: none;
+}
+
+
+@media (max-width: 767px) {
+  .select {
+    display: block;
+  }
+
+  .nice-select {
+    display: none;
+  }
+}

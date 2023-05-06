@@ -1,21 +1,32 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { BlockingContext } from './../App';
 import { UserContext } from './../Contexts/UserContext';
 import Carousel from 'better-react-carousel';
+import SignModal from './SignModal';
 import { create } from "ipfs-http-client";
 import './../styles/auction.css'
+import 'alertifyjs/build/css/alertify.css';
+import 'alertifyjs/build/css/themes/default.css';
+import alertify from 'alertifyjs';
 
 function Auction(){
   const { id } = useParams();
+  const navigate = useNavigate();
   const { loggedIn, account, token } = useContext(UserContext);
+  const setBlocking = useContext(BlockingContext);
   const [userStatus, setUserStatus] = useState('');
   const [auctionCancelled, setAuctionCancelled] = useState(false);
+  const [updateAuction, setUpdateAuction] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
   const [auctionDetails, setAuctionDetails] = useState({});
   const [ipfsData, setIpfsData] = useState(null);
   const [images, setImages] = useState(null);
   const [lastBid, setLastBid] = useState(0);
+  const [bidAmount, setBidAmount] = useState(0);
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [requestAction, setRequestAction] = useState();
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -24,8 +35,9 @@ function Auction(){
   useEffect(() => {
       axios.get(process.env.REACT_APP_REST_API_URL+'/api/auction-details/'+id)
       .then(response => {
+        console.log(response)
         setAuctionDetails(response.data.auction);
-        setStartDate(new Date(response.data.auction.start * 1000).toLocaleString('en-US', {
+        setStartDate(new Date(response.data.auction.startTime * 1000).toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -34,7 +46,7 @@ function Auction(){
             second: 'numeric',
             hour12: true
           }));
-        setEndDate(new Date(response.data.auction.end * 1000).toLocaleString('en-US', {
+        setEndDate(new Date(response.data.auction.endTime * 1000).toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -48,7 +60,7 @@ function Auction(){
       }).catch(err => {
           console.log("An error occurred obtaining auction details")
       })
-  }, [])
+  }, [updateAuction])
 
   // Use effect used to set IPFS data
   useEffect(() => {
@@ -60,7 +72,7 @@ function Auction(){
       setImages(imgArr)
       setCurrentImage(imgArr[0])
     }
-    console.log(ipfsData)
+
   }, [ipfsData]);
 
   // The method fetches data from IPFS node
@@ -90,7 +102,7 @@ function Auction(){
 
   const determineUserStatus = (auction) => {
       if(loggedIn){
-          if(account === auction.owner) setUserStatus("owner");
+          if(account === auction.auctionOwner) setUserStatus("owner");
           else{
             axios.get(process.env.REACT_APP_REST_API_URL+'/api/auction-bidding-details/'+id, {
               headers: {
@@ -98,18 +110,22 @@ function Auction(){
                 'Authorization': `Bearer ${token}`
               }
             }).then(resp => {
-              if (resp.data.hasOwnProperty('active')){
-                 setUserStatus("activeBidder");
-                 setLastBid(resp.data.historical.bid);
-              }else if (resp.data.hasOwnProperty('cancelled')) setUserStatus("cancelBidder")
-              else if(resp.data.hasOwnProperty('historical') &&
+              if (resp.data.hasOwnProperty('active') && new Date(endDate) > new Date()){
+                  setUserStatus("activeBidder");
+                  setLastBid(resp.data.historical.bid);
+              }else if (resp.data.hasOwnProperty('active') && new Date(endDate) < new Date()
+                        && auctionDetails.bidder === account){
+                  setUserStatus("winner");
+                  setLastBid(resp.data.historical.bid);
+              }else if (resp.data.hasOwnProperty('cancelled')){
+                 setUserStatus("cancelBidder")
+              }else if(resp.data.hasOwnProperty('historical') &&
                      !resp.data.hasOwnProperty('active') && !resp.data.hasOwnProperty('active')){
                         setUserStatus("refundedBidder")
                      }
               else setUserStatus('prospectiveBidder')
             }).catch(err => {
                 console.log("An error occurred while retrieveing account bidding details")
-                console.log(err)
             })
           }
       }
@@ -117,12 +133,89 @@ function Auction(){
 
   // Event Handlers
   const caruselImageClick = (image) => {
-    setCurrentImage(image);
+      setCurrentImage(image);
   };
+
+  // Button Event Handlers
+  const postRequest = (privateKey) =>{
+
+      setShowSignModal(false);
+      let uri;
+      let body;
+      let successMessage;
+      switch(requestAction){
+          case 'placeBid':
+            uri = 'place-bid';
+            body = {
+              address: account,
+              privateKey: privateKey,
+              bidAmount: bidAmount
+            }
+            successMessage = 'You Bid Successfully Placed';
+            break;
+          case 'cancelAuction':
+            uri = 'cancel-auction';
+            body = {
+              address: account,
+              privateKey: privateKey
+            }
+            successMessage = 'Auction Successfully Cancelled';
+            break;
+          case 'cancelBid':
+            uri = 'cancel-bid';
+            body = {
+              address: account,
+              privateKey: privateKey
+            }
+            successMessage = 'Your Bid Successfully Cancelled';
+            break;
+          case 'withdrawFunds':
+            uri = 'withdraw-funds'
+            successMessage = 'Your Funds Were Withdrawn';
+            body = {
+              address: account,
+              privateKey: privateKey,
+              isCancelled: true
+            }
+            break;
+          default:
+            console.log("Something went wrong");
+            alertify.error("An Error Occurred");
+      }
+
+      if(uri){
+          axios.post(process.env.REACT_APP_REST_API_URL+'/api/'+uri+'/'+id, body, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+          }).then(response => {
+            setTimeout(() => {
+                  setBlocking(false);
+                  alertify.success(successMessage);
+                  setUpdateAuction(!updateAuction);
+                  if(requestAction == 'cancelAuction') navigate('/');
+              }, 2000);
+          }).catch(err => {
+              setBlocking(false);
+              console.log(`An error: ${err}`)
+              if(err.response){
+                console.log(`An error occurred ${err.response.data.errorMessage}`)
+                const errMess = err.response.data.errorMessage.length < 80
+                              ? err.response.data.errorMessage
+                              : err.response.data.errorMessage.substring(0, 77)+"...";
+                alertify.error(errMess);
+              }
+          })
+      }
+  }
 
   return(
     <div className="container">
       <div className="row">
+      <SignModal signModalTitle="Please, Sign The Transaction" signModalInput="Private Key"
+        onShow={showSignModal} onHide={() => setShowSignModal(false)}
+        onConfirm={(key) => { setBlocking(true); postRequest(key); }}/>
         <div className="col-lg-6 col-md-12">
             <img className="selected-image" src={currentImage} />
             {images && images.length > 0 &&
@@ -140,13 +233,14 @@ function Auction(){
         <div className="auction-right-section col-lg-6 col-md-12">
 
           {ipfsData && (<h2 className="auction-name">{ipfsData.name}</h2>)}
-          <label className="auction-label">listed by {auctionDetails.owner}</label>
-          { startDate > new Date() ? (
+          <label className="auction-label">listed by {auctionDetails.auctionOwner}</label>
+
+          { new Date(startDate) > new Date() ? (
               <div className="row">
                   <div className="col-3">Auction starts:</div>
                   <div className="col-9">{startDate}</div>
               </div>
-            ) : ( endDate < new Date() ? (
+            ) : ( new Date(endDate) < new Date() ? (
                 <div className="row">
                     <div className="col-3">Auction Ended:</div>
                     <div className="col-9">{endDate}</div>
@@ -158,37 +252,43 @@ function Auction(){
                 </div>
               ))}
           <div className="bidding-section row">
-              {auctionDetails.highestBid === 0 && ( <div className="col-3" style={{fontSize: "16px"}}>Starting Bid:</div>)}
+              {auctionDetails.highestBid == 0 && ( <div className="col-3" style={{fontSize: "16px"}}>Starting Bid:</div>)}
               {auctionDetails.highestBid > 0 && ( <div className="col-3" style={{fontSize: "16px"}}>Current Bid:</div>)}
               <div className="col-5">
-                  {auctionDetails.highestBid === 0 && (<h3>CAD {auctionDetails.price}</h3>)}
-                  {auctionDetails.highestBid > 0 && (<h3>CAD {auctionDetails.highestBid}</h3>)}
+                  {auctionDetails.highestBid == 0 && (<h3>{auctionDetails.price} ETH</h3>)}
+                  {auctionDetails.highestBid > 0 && (<h3>{auctionDetails.highestBid} ETH</h3>)}
                   { loggedIn && userStatus !== 'owner' && userStatus !== 'refundedBidder' && (
                     <div>
-                      <input placeholder="Enter bid"  className="bid-input"/>
+                      {(userStatus !== 'owner' && !auctionDetails.cancelled && userStatus !== 'cancelBidder') && (
+                          <input placeholder="Enter bid"  className="bid-input" onChange={(event) => setBidAmount(event.target.value)}/>)}
                       {auctionDetails.highestBid === 0 && ( <label className="auction-label">
                           Enter {parseInt(auctionDetails.price)+parseInt(auctionDetails.step)} or more</label>)}
                       {auctionDetails.highestBid > 0 && userStatus === 'prospectiveBidder' &&
                           ( <label className="auction-label">
                           Enter {parseInt(auctionDetails.highestBid)+parseInt(auctionDetails.step)} or more</label>)}
                       {auctionDetails.highestBid > 0 && userStatus === 'activeBidder' &&
-                          ( <label className="auction-label">Your last bid was CAD {lastBid}. To overbid current price
+                          ( <label className="auction-label">Your last bid was {lastBid} ETH. To overbid current price
                            enter {parseInt(auctionDetails.highestBid)-lastBid+parseInt(auctionDetails.step)} or more</label> )}
                     </div>
                   )}
               </div>
               <div className="col-4 button-container">
                   <span>[{auctionDetails.bidCount} bids]</span>
-                  {userStatus === 'activeBidder' || userStatus === 'prospectiveBidder' && (
-                    <button type="button" className="btn bid-button">Place Bid</button> )}
+                  {(userStatus === 'activeBidder' || userStatus === 'prospectiveBidder') && (
+                    <button type="button" className="btn bid-button"
+                            onClick={() => { setShowSignModal(true); setRequestAction("placeBid"); }}>Place Bid</button> )}
                   {userStatus === 'prospectiveBidder' && (
                     <button type="button" className="btn wish-button">Add to Wishlist</button> )}
                   {userStatus === 'owner' && (
-                    <button type="button" className="btn wish-button">Cancel Auction</button> )}
+                    <button type="button" className="btn wish-button"
+                            onClick={() => { setShowSignModal(true); setRequestAction("cancelAuction"); }}>Cancel Auction</button> )}
                   {userStatus === 'activeBidder' && (
-                    <button type="button" className="btn wish-button">Cancel Bid</button> )}
-                  {userStatus === 'cancelBidder' && (
-                    <button type="button" className="btn wish-button">Withdraw Funds</button> )}
+                    <button type="button" className="btn wish-button"
+                          onClick={() => { setShowSignModal(true); setRequestAction("cancelBid"); }}>Cancel Bid</button> )}
+                  {(userStatus === 'cancelBidder' || (userStatus === 'owner' && new Date(endDate) < new Date() && !auctionDetails.cancelled)
+                    || (userStatus === 'activeBidder' && new Date(endDate) < new Date()) || (userStatus === 'activeBidder' && auctionDetails.cancelled)) && (
+                    <button type="button" className="btn wish-button"
+                          onClick={() => { setShowSignModal(true); setRequestAction("withdrawFunds");}}>Withdraw Funds</button> )}
               </div>
           </div>
 

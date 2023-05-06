@@ -22,7 +22,7 @@ provider:
     dynamodb_active_bids: active-bids
     dynamodb_historical_bids: historical-bids
     dynamodb_cancelled_bids: cancelled-bids
-    node_ip: '54.88.136.91'
+    node_ip: '54.209.21.37'
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -107,13 +107,32 @@ functions:
           path: auth/signup
           method: post
           cors: true
-  browse:
-    handler: api/browse.handler
+
+  getAllAuctions:
+    handler: api/getAllAuctions.handler
     events:
       - http:
-          path: api/browse
-          method: post
+          path: api/get-all-auctions/{promoted}
+          method: get
           cors: true
+
+  auctionsByUser:
+    handler: api/auctionsByUser.handler
+    events:
+      - http:
+          path: api/auctions-by-user
+          method: get
+          cors: true
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
 
   auctionDetails:
     handler: api/auctionDetails.handler
@@ -188,18 +207,20 @@ functions:
           path: api/create-auction
           method: post
           cors: true
-          # authorizer:
-          #   name: PrivateAuthorizer
-          #   type: COGNITO_USER_POOLS
-          #   arn:
-          #     Fn::GetAtt:
-          #       - UserPool
-          #       - Arn
-          #   claims:
-          #     - email
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
     layers:
       - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
       - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+
   placeBid:
     handler: api/placeBid.handler
     events:
@@ -207,18 +228,20 @@ functions:
           path: api/place-bid/{contractAddress}
           method: post
           cors: true
-          # authorizer:
-          #   name: PrivateAuthorizer
-          #   type: COGNITO_USER_POOLS
-          #   arn:
-          #     Fn::GetAtt:
-          #       - UserPool
-          #       - Arn
-          #   claims:
-          #     - email
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
     layers:
       - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
       - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+
   cancelBid:
     handler: api/cancelBid.handler
     events:
@@ -226,37 +249,42 @@ functions:
           path: api/cancel-bid/{contractAddress}
           method: post
           cors: true
-          # authorizer:
-          #   name: PrivateAuthorizer
-          #   type: COGNITO_USER_POOLS
-          #   arn:
-          #     Fn::GetAtt:
-          #       - UserPool
-          #       - Arn
-          #   claims:
-          #     - email
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
     layers:
       - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
       - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+
   cancelAuction:
     handler: api/cancelAuction.handler
+    timeout: 15
     events:
       - http:
-          path: api/cancel-Auction/{contractAddress}
+          path: api/cancel-auction/{contractAddress}
           method: post
           cors: true
-          # authorizer:
-          #   name: PrivateAuthorizer
-          #   type: COGNITO_USER_POOLS
-          #   arn:
-          #     Fn::GetAtt:
-          #       - UserPool
-          #       - Arn
-          #   claims:
-          #     - email
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
     layers:
       - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
       - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4
+
   withdrawFunds:
     handler: api/withdrawFunds.handler
     events:
@@ -264,15 +292,16 @@ functions:
           path: api/withdraw-funds/{contractAddress}
           method: post
           cors: true
-          # authorizer:
-          #   name: PrivateAuthorizer
-          #   type: COGNITO_USER_POOLS
-          #   arn:
-          #     Fn::GetAtt:
-          #       - UserPool
-          #       - Arn
-          #   claims:
-          #     - email
+          authorizer:
+            name: PrivateAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - UserPool
+                - Arn
+            claims:
+              - email
+          payload: '2.0'
     layers:
       - arn:aws:lambda:us-east-1:780308835025:layer:Web3:3
       - arn:aws:lambda:us-east-1:780308835025:layer:HDDWallet:4

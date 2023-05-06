@@ -5,7 +5,7 @@ const Auction = require('./../contracts/Auction.json');
 const { sendResponse, deployDataToIPFS } = require("../utils/helper");
 
 module.exports.handler = async (event) => {
-  const body = JSON.parse(event.body);
+   const body = JSON.parse(event.body);
    const dynamoDB = new AWS.DynamoDB.DocumentClient();
    const address = body.address;
    const privateKey = body.privateKey;
