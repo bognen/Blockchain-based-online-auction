@@ -359,6 +359,19 @@ nav.main-menu {
     font-size: 14pt;
 }
 
+.promoted_bt_emp {
+    width: 90%;
+    text-align: center;
+    background-color: transparent;
+    margin: 0 auto;
+    display: list-item;
+    top: -35px;
+    position: relative;
+    height: 50px;
+    border: none;
+    font-size: 14pt;
+}
+
 .eye-icon {
     width: 100%;
     margin: 0 auto;

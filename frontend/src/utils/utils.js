@@ -37,6 +37,7 @@ export function createAuctionRows(auctions) {
       <div className="row auction-row" key={`row-${i}`}>
         { auctions.map((auction) => (
           <AuctionBlock
+            key={auction.address}
             img={auction.img}
             category={auction.category}
             address={auction.address}

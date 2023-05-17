@@ -23,7 +23,7 @@ contract Auction {
  	uint public bidderCount = 0;
 
  	// Contract mappings
-	mapping(address=>uint) public activeBids;   
+	mapping(address=>uint) public activeBids;
 	mapping(address=>uint) public cancelledBids;
 
 	// Bidding history
@@ -43,20 +43,20 @@ contract Auction {
 		startPrice = _price;
 		step = _step;
 		promoted = _promoted;
-		startTime = _startTime;		
-		endTime = _endTime;			
+		startTime = _startTime;
+		endTime = _endTime;
 	}
 
 	function placeBid() public notOwner auctionInProgress notCancelled payable { 
-	
+
 		// Check current bid
 		require(msg.value != 0, "Cannot be an empty bid");
-		require(msg.sender != address(0), "Must be a legitimate user");	
+		require(msg.sender != address(0), "Must be a legitimate user");
 
 		// If highestBid is still 0, its the first bid
 		if(highestBid == 0){
 			require(msg.value >= startPrice, "Bid amount must be greater than start price");
-			highestBid = msg.value;		
+			highestBid = msg.value;
 			highestBidder = msg.sender;
 			activeBids[msg.sender] = msg.value;
 			bidderCount++;
@@ -69,22 +69,22 @@ contract Auction {
 			highestBid = bid;
 			highestBidder = msg.sender;
 			if(activeBids[msg.sender] == 0) bidderCount++;
-			activeBids[msg.sender] = bid;			
+			activeBids[msg.sender] = bid;
 		}
 		// Save bidding historical aspect
 		bidderHistoryCount++;
-		bidHistory[bidderHistoryCount] = msg.sender;	
+		bidHistory[bidderHistoryCount] = msg.sender;
 
-		emit bidPlaced(address(this), msg.sender, highestBid, bidderCount); 
+		emit bidPlaced(address(this), msg.sender, highestBid, bidderCount);
 	}
 
 	function cancelBid() public notOwner auctionInProgress notCancelled payable {
 
 		require(bidderCount > 0, "No bids to cancel");
 		require(activeBids[msg.sender]>0, "Only active bidders can cancel bids");
-		require(msg.sender != address(0), "Must be a legitimate user");	
+		require(msg.sender != address(0), "Must be a legitimate user");
 
-		if(msg.sender == highestBidder && bidderCount == 1){		
+		if(msg.sender == highestBidder && bidderCount == 1){
 			// simply return it to start price
 			highestBidder = address(0);
 			highestBid = 0;
@@ -95,7 +95,7 @@ contract Auction {
   		cancelledBids[msg.sender] = activeBids[msg.sender];
 		delete activeBids[msg.sender];
 		bidderCount--;
-		emit bidCancelled(address(this), msg.sender, highestBid, bidderCount);	
+		emit bidCancelled(address(this), msg.sender, highestBid, bidderCount);
 	}
 
 	function cancelAuction() public onlyOwner {
@@ -105,15 +105,15 @@ contract Auction {
 
 	function finishAuction() public onlyOwner{
 		require(endTime <= block.timestamp, "Auction cannot be finished before its end time");
-		emit auctionFinished(address(this), highestBidder, activeBids[highestBidder], address(this).balance); 
+		emit auctionFinished(address(this), highestBidder, activeBids[highestBidder], address(this).balance);
 	}
 
 	// Have to handle cases:
 	// 1. Cancelled by owner
 	// 2. Owner withdraws funds
 	// 3. Participants withdraw funds
-	function withdrawFunds() public inactiveAuction payable returns(bool success) {  
-		
+	function withdrawFunds() public inactiveAuction payable returns(bool success) {
+
 		address recipientAccount;
         uint recipientAmount;
 
@@ -130,7 +130,7 @@ contract Auction {
 				require(msg.sender != highestBidder, "The winner cannot withdraw funds");
 				recipientAccount = msg.sender;
 				recipientAmount = activeBids[msg.sender];
-			}			
+			}
 		}
 
 		if (recipientAmount == 0) revert("Amount must be non-zero value");
@@ -139,7 +139,7 @@ contract Auction {
 		if (!payableRecipientAccount.send(recipientAmount)) revert("Fund transfer has failed");
  		delete activeBids[msg.sender];
 
-		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount, address(this).balance);	
+		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount, address(this).balance);
 		return true;
 	}
 
@@ -148,12 +148,12 @@ contract Auction {
         uint recipientAmount = cancelledBids[recipientAccount];
 
 		if (recipientAmount == 0) revert("Amount must be non-zero value");
-		
+
 		address payable payableRecipientAccount = payable(recipientAccount);
         if (!payableRecipientAccount.send(recipientAmount)) revert("Fund transfer has failed");
  		delete cancelledBids[recipientAccount];
 
-		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount, address(this).balance);	
+		emit fundsWithdrawn(address(this), recipientAccount, recipientAmount, address(this).balance);
 		return true;
 	}
 
@@ -161,37 +161,37 @@ contract Auction {
 	// The function cannpot be called if there less than two active bidders
 	// _order should correspond to the current highest bid
 	function getNewHighestBid(uint _order) private view returns (address newHighestBidder, uint newHighestBid) {
-		
+
 		address historicalBidder =  bidHistory[_order-1];
-		if(activeBids[historicalBidder] > 0) return (historicalBidder, activeBids[historicalBidder]); 	
-		else getNewHighestBid(_order-1);  
+		if(activeBids[historicalBidder] > 0) return (historicalBidder, activeBids[historicalBidder]);
+		else getNewHighestBid(_order-1);
 	}
 
   	//*** Modifiers
   	modifier onlyOwner {
         require(msg.sender == owner, "Only the contract owner can perform this action");
-        _; // 
+        _; //
     }
-  	
+
   	modifier notOwner {
         require(msg.sender != owner, "Contract owner Cannot perform this action");
-        _; // 
+        _; //
     }
 
     modifier auctionInProgress {
-    	require(startTime <= block.timestamp && endTime >= block.timestamp, 
+    	require(startTime <= block.timestamp && endTime >= block.timestamp,
     		"Auction is not in progress");
-        _; // 
+        _; //
     }
 
     modifier notCancelled {
     	require(!cancelled, "Auction is cancelled");
-        _; // 
+        _; //
     }
 
     modifier inactiveAuction {
     	require(block.timestamp >= endTime || cancelled, "Auction is still active");
-        _; // 
+        _; //
     }
 
 }

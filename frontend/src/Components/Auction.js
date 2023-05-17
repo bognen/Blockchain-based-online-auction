@@ -35,7 +35,6 @@ function Auction(){
   useEffect(() => {
       axios.get(process.env.REACT_APP_REST_API_URL+'/api/auction-details/'+id)
       .then(response => {
-        console.log(response)
         setAuctionDetails(response.data.auction);
         setStartDate(new Date(response.data.auction.startTime * 1000).toLocaleString('en-US', {
             year: 'numeric',
@@ -55,8 +54,8 @@ function Auction(){
             second: 'numeric',
             hour12: true
           }));
-        fetchIpfsData(response.data.auction.hash);
-        determineUserStatus(response.data.auction);
+        // fetchIpfsData(response.data.auction.hash);
+        // determineUserStatus(response.data.auction);
       }).catch(err => {
           console.log("An error occurred obtaining auction details")
       })
@@ -75,34 +74,42 @@ function Auction(){
 
   }, [ipfsData]);
 
+  useEffect(() => {
+      fetchIpfsData(auctionDetails.hash);
+      determineUserStatus(auctionDetails);
+  }, [startDate, endDate, auctionDetails]);
+
   // The method fetches data from IPFS node
   const fetchIpfsData = async (hash) => {
-    try {
-      const ipfs = create({ host: process.env.REACT_APP_IPFS_URL, port: "5001", protocol: "http" });
-      const dataStream = await ipfs.get(hash);
-      const chunks = [];
-      for await (const chunk of dataStream) {
-          chunks.push(chunk);
+      if(hash){
+        try {
+            const ipfs = create({ host: process.env.REACT_APP_IPFS_URL, port: "5001", protocol: "http" });
+            const dataStream = await ipfs.get(hash);
+            const chunks = [];
+            for await (const chunk of dataStream) {
+                chunks.push(chunk);
+            }
+            const combinedChunks = chunks.reduce((acc, chunk) => {
+                return new Uint8Array([...acc, ...chunk]);
+            }, new Uint8Array());
+
+            const jsonString = new TextDecoder().decode(new Uint8Array(combinedChunks));
+            const payloadStartIndex = jsonString.indexOf('{');
+            const payloadString = jsonString.slice(payloadStartIndex);
+            const cleanedPayloadString = payloadString.replace(/\0/g, '').trim();
+            const jsonData = JSON.parse(cleanedPayloadString);
+
+            setIpfsData(jsonData);
+        } catch (error) {
+            console.error("Error fetching data from IPFS:", error);
+        }
       }
-      const combinedChunks = chunks.reduce((acc, chunk) => {
-          return new Uint8Array([...acc, ...chunk]);
-      }, new Uint8Array());
-
-      const jsonString = new TextDecoder().decode(new Uint8Array(combinedChunks));
-      const payloadStartIndex = jsonString.indexOf('{');
-      const payloadString = jsonString.slice(payloadStartIndex);
-      const cleanedPayloadString = payloadString.replace(/\0/g, '').trim();
-      const jsonData = JSON.parse(cleanedPayloadString);
-
-      setIpfsData(jsonData);
-    } catch (error) {
-      console.error("Error fetching data from IPFS:", error);
-    }
   };
 
   const determineUserStatus = (auction) => {
-      if(loggedIn){
-          if(account === auction.auctionOwner) setUserStatus("owner");
+
+      if(loggedIn && auction.auctionOwner){
+          if(account == auction.auctionOwner) setUserStatus("owner");
           else{
             axios.get(process.env.REACT_APP_REST_API_URL+'/api/auction-bidding-details/'+id, {
               headers: {
@@ -110,11 +117,11 @@ function Auction(){
                 'Authorization': `Bearer ${token}`
               }
             }).then(resp => {
-              if (resp.data.hasOwnProperty('active') && new Date(endDate) > new Date()){
+              if (resp.data.hasOwnProperty('active') && (new Date(endDate) > new Date())){
                   setUserStatus("activeBidder");
                   setLastBid(resp.data.historical.bid);
-              }else if (resp.data.hasOwnProperty('active') && new Date(endDate) < new Date()
-                        && auctionDetails.bidder === account){
+              }else if (resp.data.hasOwnProperty('active') && (new Date(endDate) < new Date())
+                        && auction.bidder === account){
                   setUserStatus("winner");
                   setLastBid(resp.data.historical.bid);
               }else if (resp.data.hasOwnProperty('cancelled')){
@@ -124,6 +131,7 @@ function Auction(){
                         setUserStatus("refundedBidder")
                      }
               else setUserStatus('prospectiveBidder')
+
             }).catch(err => {
                 console.log("An error occurred while retrieveing account bidding details")
             })
@@ -279,19 +287,20 @@ function Auction(){
                             onClick={() => { setShowSignModal(true); setRequestAction("placeBid"); }}>Place Bid</button> )}
                   {userStatus === 'prospectiveBidder' && (
                     <button type="button" className="btn wish-button">Add to Wishlist</button> )}
-                  {userStatus === 'owner' && (
+                  {(userStatus === 'owner' &&  new Date(endDate) > new Date()) && (
                     <button type="button" className="btn wish-button"
                             onClick={() => { setShowSignModal(true); setRequestAction("cancelAuction"); }}>Cancel Auction</button> )}
                   {userStatus === 'activeBidder' && (
                     <button type="button" className="btn wish-button"
                           onClick={() => { setShowSignModal(true); setRequestAction("cancelBid"); }}>Cancel Bid</button> )}
-                  {(userStatus === 'cancelBidder' || (userStatus === 'owner' && new Date(endDate) < new Date() && !auctionDetails.cancelled)
-                    || (userStatus === 'activeBidder' && new Date(endDate) < new Date()) || (userStatus === 'activeBidder' && auctionDetails.cancelled)) && (
+                  {(userStatus === 'cancelBidder'
+                    || (userStatus === 'owner' && new Date(endDate) < new Date() && !auctionDetails.cancelled && auctionDetails.bidCount > 0)
+                    || (userStatus === 'activeBidder' && new Date(endDate) < new Date())
+                    || (userStatus === 'activeBidder' && auctionDetails.cancelled)) && (
                     <button type="button" className="btn wish-button"
                           onClick={() => { setShowSignModal(true); setRequestAction("withdrawFunds");}}>Withdraw Funds</button> )}
               </div>
           </div>
-
           <div className="description-section row">
               <div className="col-3">Description:</div>
               {ipfsData && (<div className="col-9">{ipfsData.description}</div>)}
