@@ -22,7 +22,7 @@ provider:
     dynamodb_active_bids: active-bids
     dynamodb_historical_bids: historical-bids
     dynamodb_cancelled_bids: cancelled-bids
-    node_ip: '44.203.125.119'
+    node_ip: '3.88.248.28'
 
   iamRoleStatements:
     - Effect: "Allow"
