@@ -12,20 +12,19 @@ module.exports.handler = async (event) => {
   };
   const scanParams = {
         TableName: process.env.dynamodb_historical_bids,
-        FilterExpression: 'auctionAddr = :auctionAddr',
+        FilterExpression: 'auction = :auction',
         ExpressionAttributeValues: {
-            ':auctionAddr': contractAddress
+            ':auction': contractAddress
         }
   };
-
-
 
   try{
       const bids = await dynamoDB.scan(scanParams).promise();
       let highestBidder;
+
       if(bids.Items.length > 0){
         highestBidder = bids.Items.reduce((max, object) => {
-          return obj.bid > max.bid ? obj : max;
+          return object.bid > max.bid ? object : max;
         }, bids.Items[0])
       }else{
         highestBidder = {bidder: "", auction: "", bid: 0}

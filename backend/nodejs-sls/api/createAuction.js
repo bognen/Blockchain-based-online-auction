@@ -19,9 +19,6 @@ module.exports.handler = async (event) => {
     const startTime = body.start;
     const endTime = body.end;
 
-console.log("Promoted", promoted);
-console.log("Type", typeof promoted)
-
     try {
       const provider = new Provider(privateKey, node_url);
       const web3 = new Web3(provider);

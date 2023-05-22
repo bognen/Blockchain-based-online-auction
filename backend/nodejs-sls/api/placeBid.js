@@ -15,7 +15,6 @@ module.exports.handler = async (event) => {
    const web3 = new Web3(provider);
    const networkId = await web3.eth.net.getId();
 
-   // A contract can be deployed from here. See my chatGpt
    const auctionContract = new web3.eth.Contract(
      Auction.abi,
      contractAddress

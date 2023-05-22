@@ -10,8 +10,12 @@ function AuctionBlock ({img, category, address, promoted, startPrice, highestBid
         <div className="images">
           <img src={`http://${process.env.REACT_APP_IPFS_URL}:8080/ipfs/${img}`} style={{ width: '100%' }} />
         </div>
-        {promoted && <button className="promoted_bt">PROMOTED</button>}
-        <div className="eye-icon"><img src={eye_icon}/><span className="like-icon"><img src={like_icon}/></span></div>
+        {promoted ?
+            (<button className="promoted_bt">PROMOTED</button>) :
+            (<button className="promoted_bt_emp"></button>)}
+        <div className="eye-icon">
+            <img src={eye_icon}/><span className="like-icon"><img src={like_icon}/></span>
+        </div>
         {highestBid == 0 ? (
           <div className="numbar_text">{startPrice}<span className="like-icon">{bids}</span></div>
         ):(

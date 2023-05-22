@@ -64,6 +64,7 @@ function Header(){
       setToken(null);
       setTokenExpiresAt(null);
       setAccount(null);
+      navigate('/');
   }
 
   const goToMyAuctions = () => {
@@ -115,7 +116,7 @@ function Header(){
                       <div className="collapse navbar-collapse" id="navbarNavAltMarkup" style={{ justifyContent: "center" }}>
                           <div className="navbar-nav">
                              <a className="nav-item nav-link" href="/">Home</a>
-                             <a className="nav-item nav-link" href="/browse">Browse</a>
+                             <a className="nav-item nav-link" href="/browse?category=default&location=default">Browse</a>
                              <a className="nav-item nav-link" href="/about">About</a>
                              <a className="nav-item nav-link" href="/contact">Contact</a>
                              { loggedIn && (

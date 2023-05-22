@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate  } from 'react-router-dom';
 import axios from 'axios';
 import AuctionBlock from './AuctionBlock.js';
 import { fetchIpfsData } from "./../utils/utils.js";
@@ -9,7 +10,10 @@ import alertify from 'alertifyjs';
 
 function Home(){
 
+  const navigate = useNavigate();
   const [auctions, setAuctions] = useState([]);
+  const [searchLocation, setSearchLocation] = useState('default');
+  const [searchCategory, setSearchCategory] = useState('default');
 
   useEffect(() => {
       axios.get(process.env.REACT_APP_REST_API_URL+'/api/get-all-auctions/four')
@@ -18,13 +22,13 @@ function Home(){
               response.data.auctions.map(async (item) => {
                   let ipfsData = await fetchIpfsData(item.hash);
                   return {
-                    img: ipfsData.images[0],
-                    category: ipfsData.category,
-                    address: item.auctionAddress,
-                    promoted: item.promoted,
-                    startPrice: item.price,
-                    highestBid: item.highestBid,
-                    bids: item.bidCount,
+                      img: ipfsData.images[0],
+                      category: ipfsData.category,
+                      address: item.auctionAddress,
+                      promoted: item.promoted,
+                      startPrice: item.price,
+                      highestBid: item.highestBid,
+                      bids: item.bidCount,
                   };
                 })
             );
@@ -42,10 +46,14 @@ function Home(){
       rows.push(
         <div className="row" key={`row-${i}`}>
           { rowAuctions.map((auction) => (
-            <AuctionBlock img={auction.img} category={auction.category} address={auction.address} promoted={auction.promoted}
+            <AuctionBlock key={auction.address} img={auction.img} category={auction.category} address={auction.address} promoted={auction.promoted}
                 startPrice={auction.startPrice} highestBid={auction.highestBid} bids={auction.bids} />
           ))}
         </div>);
+  }
+
+  const searchButtonClick = () => {
+    console.log("Click");
   }
 
   return(
@@ -73,8 +81,8 @@ function Home(){
             </div>
             <div className="col-sm-3">
               <div className="form-group">
-              <select name="Location" className="email_boton home_select">
-                  <option value="">Select a location</option>
+              <select name="Location" className="email_boton home_select" value={searchLocation} onChange={(event) => setSearchLocation(event.target.value)}>
+                  <option value="default">Select a location</option>
                   <option value="North America">North America</option>
                   <option value="South America">South America</option>
                   <option value="Africa">Africa</option>
@@ -86,8 +94,8 @@ function Home(){
             </div>
             <div className="col-sm-3">
               <div className="form-group">
-                <select name="category" className="email_boton home_select">
-                    <option value="">Select a category</option>
+                <select name="category" className="email_boton home_select" value={searchCategory} onChange={(event) => setSearchCategory(event.target.value)}>
+                    <option value="default">Select a category</option>
                     <option value="Auto Mobile">Auto Mobile</option>
                     <option value="Fashion">Fashion</option>
                     <option value="Mother&Child">Mother&Child</option>
@@ -101,8 +109,9 @@ function Home(){
             </div>
             <div className="col-sm-3">
               <div className="form-group">
-                            <button className="search_bt">Search</button>
-                        </div>
+                  <button className="search_bt"
+                  onClick={() => navigate(`/browse?category=${searchCategory}&location=${searchLocation}`)}>Search</button>
+              </div>
             </div>
             <div className="fashion_menu">
                           <ul>

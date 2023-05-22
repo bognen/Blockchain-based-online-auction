@@ -145,8 +145,6 @@ const removeActiveContract = (contractAddress) => {
 mainContract.events.auctionCreated({})
   .on('data', (event) => {
     const eventData = event.returnValues;
-    console.log('Auction created:', eventData);
-    console.log('Auction address:', eventData.auctionAddress);
 
     // Add the contract instance as active
     addActiveContract(eventData.auctionAddress);
