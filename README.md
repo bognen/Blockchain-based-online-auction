@@ -30,18 +30,21 @@ To run the Blockchain-Based Online Auction platform locally, ensure you have the
 Follow these steps to get the auction platform up and running on your local machine:
 
 1. Clone this repository: `git clone https://github.com/yourusername/blockchain-online-auction.git`
-2. Install dependencies: `npm install`
-3. Start AWS EC2 instance, get its Public IP
-4. Using public IP connect to the instance using Putty or WinSCP, restart ganache and grep new accounts/keys
-5. Paste Public IP in truffle-config.json and excute `truffle migrate --network awsganache`
-6. Copy MainContract address and paste in into server.js located on EC2 /home/ec2-user/listener
-7. Copy build artifacts (MainContract.json and Auction.json) to EC2 instance /home/ec2-user/listener
-8. Copy build artifacts (MainContract.json and Auction.json) to sls contracts folder
-9. Paste Public IP to serverless yuml as eth_node_url
-10. Execute sls deploy
-11. On the EC2 instance execute: Start listener service on EC2 server: `sudo systemctl start listener`
-12. In frontend folder execute `npm start`
-7. Access the application in your browser at `http://localhost:3000`
+2. Install dependencies: `npm install` in:
+   - frontend directory
+   - backend/sls directory
+   - backend/smart-contracts directory
+4. Start AWS EC2 instance, get its Public IP
+5. Using public IP connect to the instance using Putty or WinSCP, restart ganache and grep new accounts/keys
+6. Paste Public IP in truffle-config.json and excute `truffle migrate --network awsganache`
+7. Copy MainContract address and paste in into server.js located on EC2 /home/ec2-user/listener
+8. Copy build artifacts (MainContract.json and Auction.json) to EC2 instance /home/ec2-user/listener
+9. Copy build artifacts (MainContract.json and Auction.json) to sls contracts folder
+10. Paste Public IP to serverless yuml as eth_node_url
+11. Execute sls deploy
+12. On the EC2 instance execute: Start listener service on EC2 server: `sudo systemctl start listener`
+13. In frontend folder execute `npm start`
+14. Access the application in your browser at `http://localhost:3000`
 
 ## Usage
 
@@ -90,17 +93,20 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 1. Клонуйте це сховище: `git clone https://github.com/yourusername/blockchain-online-auction.git`
 2. Встановити залежності: `npm install`
-3. Запустіть екземпляр AWS EC2, отримайте його загальнодоступну IP-адресу
-4. Використовуючи загальнодоступну IP-адресу, підключіться до екземпляра за допомогою Putty або WinSCP, перезапустіть ganache і grep нові облікові записи/ключі
-5. Вставте публічну IP-адресу в truffle-config.json і виконайте `truffle migrate --network awsganache`
-6. Скопіюйте адресу MainContract і вставте її в файл server.js, розташований на EC2 /home/ec2-user/listener
-7. Скопіюйте артефакти збірки (MainContract.json і Auction.json) до екземпляра EC2 /home/ec2-user/listener
-8. Скопіюйте артефакти збірки (MainContract.json і Auction.json) до папки sls contracts
-9. Вставте загальнодоступну IP-адресу в безсерверний yuml як eth_node_url
-10. Виконайте sls deploy
-11. На екземплярі EC2 виконайте: Запустіть службу слухача на сервері EC2: `sudo systemctl start listener`
-12. У папці інтерфейсу виконайте `npm start`
-7. Відкрийте програму у своєму браузері за адресою `http://localhost:3000`
+   - в директорії frontend
+   - в директорії backend/sls
+   - в директорії backend/smart-contract
+4. Запустіть екземпляр AWS EC2, отримайте його загальнодоступну IP-адресу
+5. Використовуючи загальнодоступну IP-адресу, підключіться до екземпляра за допомогою Putty або WinSCP, перезапустіть ganache і grep нові облікові записи/ключі
+6. Вставте публічну IP-адресу в truffle-config.json і виконайте `truffle migrate --network awsganache`
+7. Скопіюйте адресу MainContract і вставте її в файл server.js, розташований на EC2 /home/ec2-user/listener
+8. Скопіюйте артефакти збірки (MainContract.json і Auction.json) до екземпляра EC2 /home/ec2-user/listener
+9. Скопіюйте артефакти збірки (MainContract.json і Auction.json) до папки sls contracts
+10. Вставте загальнодоступну IP-адресу в безсерверний yuml як eth_node_url
+11. Виконайте sls deploy
+12. На екземплярі EC2 виконайте: Запустіть службу слухача на сервері EC2: `sudo systemctl start listener`
+13. У папці інтерфейсу виконайте `npm start`
+14. Відкрийте програму у своєму браузері за адресою `http://localhost:3000`
 
 ## Використання
 
